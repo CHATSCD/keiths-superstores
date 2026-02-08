@@ -37,6 +37,7 @@ import {
   generateId,
 } from '@/lib/storage';
 import { OcrResult, ProductionEntry, WasteEntry } from '@/types';
+import { seedIfEmpty } from '@/lib/seed';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('production');
@@ -46,6 +47,10 @@ export default function HomePage() {
   const [todayWaste, setTodayWaste] = useState(0);
   const [saved, setSaved] = useState(false);
   const [logKey, setLogKey] = useState(0);
+
+  useEffect(() => {
+    seedIfEmpty();
+  }, []);
 
   const refreshStats = useCallback(() => {
     const today = getTodayStr();
