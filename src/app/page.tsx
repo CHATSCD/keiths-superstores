@@ -18,6 +18,7 @@ import BottomNav from '@/components/BottomNav';
 import Scanner from '@/components/Scanner';
 import OcrResults from '@/components/OcrResults';
 import ManualEntryForm from '@/components/ManualEntryForm';
+import QRCodeCanvas from '@/components/QRCodeCanvas';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -395,44 +396,81 @@ function TodayLog({ onUpdate }: { onUpdate: () => void }) {
       {/* Printable Report (hidden on screen, shown on print) */}
       <div className="print-only">
         <div className="text-center mb-4 border-b pb-3">
-          <h1 className="text-xl font-bold">Keith&apos;s Superstores</h1>
-          <p className="text-sm text-gray-500 italic">&ldquo;The Fastest And Friendliest&rdquo;</p>
-          <h2 className="text-lg font-semibold mt-2">
-            Daily Production &amp; Waste Report — {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </h2>
+          <div className="flex justify-between items-start">
+            <div className="flex-1" />
+            <div className="text-center flex-1">
+              <h1 className="text-xl font-bold">Keith&apos;s Superstores</h1>
+              <p className="text-sm text-gray-500 italic">&ldquo;The Fastest And Friendliest&rdquo;</p>
+              <h2 className="text-lg font-semibold mt-2">
+                Daily Production &amp; Waste Report
+              </h2>
+              <p className="text-sm text-gray-600">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <QRCodeCanvas
+                data={JSON.stringify({
+                  type: 'daily-report',
+                  date: getTodayStr(),
+                  production: totalProdUnits,
+                  waste: totalWasteUnits,
+                  entries: productionEntries.length + wasteEntries.length,
+                })}
+                size={80}
+              />
+            </div>
+          </div>
         </div>
 
         {productionEntries.length > 0 && (
           <div className="mb-6">
             <h3 className="text-base font-bold mb-2 border-b pb-1">Production Reports</h3>
             {productionEntries.map((entry) => (
-              <div key={entry.id} className="mb-3">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>Cook: {entry.employeeName}</span>
-                  <span>Shift: {entry.shift}</span>
+              <div key={entry.id} className="mb-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm font-semibold pr-3">
+                      <span>Cook: {entry.employeeName}</span>
+                      <span>Shift: {entry.shift}</span>
+                    </div>
+                    <table className="w-full text-sm mt-1">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-0.5">Item</th>
+                          <th className="text-right py-0.5 w-20">Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entry.items.map((item, idx) => (
+                          <tr key={idx} className="border-b border-gray-100">
+                            <td className="py-0.5">{item.itemName}</td>
+                            <td className="text-right py-0.5">{item.quantity}</td>
+                          </tr>
+                        ))}
+                        <tr className="font-semibold">
+                          <td className="py-0.5">Total</td>
+                          <td className="text-right py-0.5">
+                            {entry.items.reduce((s, i) => s + i.quantity, 0)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="ml-3 flex-shrink-0">
+                    <QRCodeCanvas
+                      data={JSON.stringify({
+                        id: entry.id,
+                        type: 'production',
+                        date: entry.date,
+                        cook: entry.employeeName,
+                        shift: entry.shift,
+                        items: entry.items.map((i) => ({ name: i.itemName, qty: i.quantity })),
+                      })}
+                      size={72}
+                    />
+                  </div>
                 </div>
-                <table className="w-full text-sm mt-1">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-0.5">Item</th>
-                      <th className="text-right py-0.5 w-20">Qty</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entry.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-100">
-                        <td className="py-0.5">{item.itemName}</td>
-                        <td className="text-right py-0.5">{item.quantity}</td>
-                      </tr>
-                    ))}
-                    <tr className="font-semibold">
-                      <td className="py-0.5">Total</td>
-                      <td className="text-right py-0.5">
-                        {entry.items.reduce((s, i) => s + i.quantity, 0)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
             ))}
           </div>
@@ -442,33 +480,50 @@ function TodayLog({ onUpdate }: { onUpdate: () => void }) {
           <div className="mb-6">
             <h3 className="text-base font-bold mb-2 border-b pb-1">Waste Reports</h3>
             {wasteEntries.map((entry) => (
-              <div key={entry.id} className="mb-3">
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>Cook: {entry.employeeName}</span>
-                  <span>Shift: {entry.shift}</span>
+              <div key={entry.id} className="mb-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm font-semibold pr-3">
+                      <span>Cook: {entry.employeeName}</span>
+                      <span>Shift: {entry.shift}</span>
+                    </div>
+                    <table className="w-full text-sm mt-1">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-0.5">Item</th>
+                          <th className="text-right py-0.5 w-20">Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entry.items.map((item, idx) => (
+                          <tr key={idx} className="border-b border-gray-100">
+                            <td className="py-0.5">{item.itemName}</td>
+                            <td className="text-right py-0.5">{item.quantity}</td>
+                          </tr>
+                        ))}
+                        <tr className="font-semibold">
+                          <td className="py-0.5">Total</td>
+                          <td className="text-right py-0.5">
+                            {entry.items.reduce((s, i) => s + i.quantity, 0)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="ml-3 flex-shrink-0">
+                    <QRCodeCanvas
+                      data={JSON.stringify({
+                        id: entry.id,
+                        type: 'waste',
+                        date: entry.date,
+                        cook: entry.employeeName,
+                        shift: entry.shift,
+                        items: entry.items.map((i) => ({ name: i.itemName, qty: i.quantity })),
+                      })}
+                      size={72}
+                    />
+                  </div>
                 </div>
-                <table className="w-full text-sm mt-1">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-0.5">Item</th>
-                      <th className="text-right py-0.5 w-20">Qty</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entry.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-100">
-                        <td className="py-0.5">{item.itemName}</td>
-                        <td className="text-right py-0.5">{item.quantity}</td>
-                      </tr>
-                    ))}
-                    <tr className="font-semibold">
-                      <td className="py-0.5">Total</td>
-                      <td className="text-right py-0.5">
-                        {entry.items.reduce((s, i) => s + i.quantity, 0)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
             ))}
           </div>
