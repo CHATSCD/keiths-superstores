@@ -115,6 +115,51 @@ export function saveWeeklyCount(count: WeeklyCount): void {
   setItem(KEYS.weeklyCounts, counts);
 }
 
+// Export / Import
+export interface BackupData {
+  version: 1;
+  exportedAt: string;
+  employees: Employee[];
+  inventory: InventoryItem[];
+  production: ProductionEntry[];
+  waste: WasteEntry[];
+  weeklyCounts: WeeklyCount[];
+}
+
+export function exportAllData(): BackupData {
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    employees: getEmployees(),
+    inventory: getInventory(),
+    production: getProductionEntries(),
+    waste: getWasteEntries(),
+    weeklyCounts: getWeeklyCounts(),
+  };
+}
+
+export function importAllData(data: BackupData): { success: boolean; error?: string } {
+  try {
+    if (!data || data.version !== 1) {
+      return { success: false, error: 'Invalid backup file format' };
+    }
+    if (data.employees) saveEmployees(data.employees);
+    if (data.inventory) saveInventory(data.inventory);
+    if (data.production) setItem(KEYS.production, data.production);
+    if (data.waste) setItem(KEYS.waste, data.waste);
+    if (data.weeklyCounts) setItem(KEYS.weeklyCounts, data.weeklyCounts);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Import failed' };
+  }
+}
+
+export function clearAllData(): void {
+  Object.values(KEYS).forEach((key) => {
+    if (typeof window !== 'undefined') localStorage.removeItem(key);
+  });
+}
+
 // Utility
 export function getTodayStr(): string {
   return new Date().toISOString().split('T')[0];

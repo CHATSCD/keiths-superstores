@@ -17,6 +17,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   UserPlus,
+  Download,
+  Upload,
+  Database,
+  AlertTriangle,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
@@ -39,6 +43,10 @@ import {
   getWeeklyCounts,
   saveWeeklyCount,
   generateId,
+  exportAllData,
+  importAllData,
+  clearAllData,
+  type BackupData,
 } from '@/lib/storage';
 import { calculateEmployeePerformance, calculateOrderSuggestions } from '@/lib/performance';
 import {
@@ -76,6 +84,10 @@ export default function ManagerPage() {
               <Users className="h-3.5 w-3.5 mr-1" />
               Staff
             </TabsTrigger>
+            <TabsTrigger value="data">
+              <Database className="h-3.5 w-3.5 mr-1" />
+              Data
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="items">
@@ -89,6 +101,9 @@ export default function ManagerPage() {
           </TabsContent>
           <TabsContent value="employees">
             <EmployeesTab />
+          </TabsContent>
+          <TabsContent value="data">
+            <DataTab />
           </TabsContent>
         </Tabs>
       </main>
@@ -732,6 +747,197 @@ function EmployeesTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ============ DATA TAB ============
+function DataTab() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [stats, setStats] = useState({ employees: 0, items: 0, production: 0, waste: 0, weekly: 0 });
+
+  useEffect(() => {
+    setStats({
+      employees: getEmployees().length,
+      items: getInventory().length,
+      production: getProductionEntries().length,
+      waste: getWasteEntries().length,
+      weekly: getWeeklyCounts().length,
+    });
+  }, [status]);
+
+  const handleExport = () => {
+    const data = exportAllData();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `keiths-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus({ type: 'success', message: 'Backup exported successfully' });
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string) as BackupData;
+        const result = importAllData(data);
+        if (result.success) {
+          setStatus({ type: 'success', message: 'Data imported successfully. All records restored.' });
+        } else {
+          setStatus({ type: 'error', message: result.error || 'Import failed' });
+        }
+      } catch {
+        setStatus({ type: 'error', message: 'Invalid JSON file. Please select a valid backup.' });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleClear = () => {
+    clearAllData();
+    setShowClearConfirm(false);
+    setStatus({ type: 'success', message: 'All data has been cleared' });
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Data Summary */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Data Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-lg font-bold">{stats.employees}</p>
+              <p className="text-xs text-muted-foreground">Employees</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-lg font-bold">{stats.items}</p>
+              <p className="text-xs text-muted-foreground">Items</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-lg font-bold">{stats.production}</p>
+              <p className="text-xs text-muted-foreground">Prod Reports</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center mt-2">
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-lg font-bold">{stats.waste}</p>
+              <p className="text-xs text-muted-foreground">Waste Reports</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <p className="text-lg font-bold">{stats.weekly}</p>
+              <p className="text-xs text-muted-foreground">Weekly Counts</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Status Message */}
+      {status && (
+        <div
+          className={`rounded-lg p-3 text-sm font-medium ${
+            status.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-700'
+              : 'bg-red-50 border border-red-200 text-red-700'
+          }`}
+        >
+          {status.message}
+        </div>
+      )}
+
+      {/* Export */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Export Backup
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Download all data as a JSON file for safekeeping.
+            </p>
+          </div>
+          <Button onClick={handleExport} className="w-full bg-keiths-red hover:bg-keiths-darkRed">
+            <Download className="h-4 w-4 mr-2" />
+            Export All Data
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Import */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Import Backup
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Restore data from a previously exported JSON backup. This will overwrite existing data.
+            </p>
+          </div>
+          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="w-full">
+            <Upload className="h-4 w-4 mr-2" />
+            Select Backup File
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImport}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Clear */}
+      <Card className="border-red-200">
+        <CardContent className="p-4 space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-4 w-4" />
+              Clear All Data
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Permanently delete all employees, reports, and counts. This cannot be undone.
+            </p>
+          </div>
+          {showClearConfirm ? (
+            <div className="flex gap-2">
+              <Button onClick={() => setShowClearConfirm(false)} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleClear} variant="destructive" className="flex-1">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Yes, Delete Everything
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setShowClearConfirm(true)}
+              variant="outline"
+              className="w-full text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All Data
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
