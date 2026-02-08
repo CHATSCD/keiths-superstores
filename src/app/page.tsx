@@ -11,6 +11,7 @@ import {
   Edit2,
   X,
   Check,
+  Printer,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
@@ -371,14 +372,133 @@ function TodayLog({ onUpdate }: { onUpdate: () => void }) {
     onUpdate();
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (productionEntries.length === 0 && wasteEntries.length === 0) return null;
 
+  const totalProdUnits = productionEntries.reduce(
+    (sum, e) => sum + e.items.reduce((s, i) => s + i.quantity, 0), 0
+  );
+  const totalWasteUnits = wasteEntries.reduce(
+    (sum, e) => sum + e.items.reduce((s, i) => s + i.quantity, 0), 0
+  );
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Today&apos;s Log</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <>
+      {/* Printable Report (hidden on screen, shown on print) */}
+      <div className="print-only">
+        <div className="text-center mb-4 border-b pb-3">
+          <h1 className="text-xl font-bold">Keith&apos;s Superstores</h1>
+          <p className="text-sm text-gray-500 italic">&ldquo;The Fastest And Friendliest&rdquo;</p>
+          <h2 className="text-lg font-semibold mt-2">
+            Daily Production &amp; Waste Report — {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </h2>
+        </div>
+
+        {productionEntries.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-base font-bold mb-2 border-b pb-1">Production Reports</h3>
+            {productionEntries.map((entry) => (
+              <div key={entry.id} className="mb-3">
+                <div className="flex justify-between text-sm font-semibold">
+                  <span>Cook: {entry.employeeName}</span>
+                  <span>Shift: {entry.shift}</span>
+                </div>
+                <table className="w-full text-sm mt-1">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-0.5">Item</th>
+                      <th className="text-right py-0.5 w-20">Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entry.items.map((item, idx) => (
+                      <tr key={idx} className="border-b border-gray-100">
+                        <td className="py-0.5">{item.itemName}</td>
+                        <td className="text-right py-0.5">{item.quantity}</td>
+                      </tr>
+                    ))}
+                    <tr className="font-semibold">
+                      <td className="py-0.5">Total</td>
+                      <td className="text-right py-0.5">
+                        {entry.items.reduce((s, i) => s + i.quantity, 0)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {wasteEntries.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-base font-bold mb-2 border-b pb-1">Waste Reports</h3>
+            {wasteEntries.map((entry) => (
+              <div key={entry.id} className="mb-3">
+                <div className="flex justify-between text-sm font-semibold">
+                  <span>Cook: {entry.employeeName}</span>
+                  <span>Shift: {entry.shift}</span>
+                </div>
+                <table className="w-full text-sm mt-1">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-0.5">Item</th>
+                      <th className="text-right py-0.5 w-20">Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entry.items.map((item, idx) => (
+                      <tr key={idx} className="border-b border-gray-100">
+                        <td className="py-0.5">{item.itemName}</td>
+                        <td className="text-right py-0.5">{item.quantity}</td>
+                      </tr>
+                    ))}
+                    <tr className="font-semibold">
+                      <td className="py-0.5">Total</td>
+                      <td className="text-right py-0.5">
+                        {entry.items.reduce((s, i) => s + i.quantity, 0)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t pt-2 text-sm">
+          <div className="flex justify-between font-semibold">
+            <span>Total Production: {totalProdUnits} units</span>
+            <span>Total Waste: {totalWasteUnits} units</span>
+          </div>
+          {totalProdUnits > 0 && (
+            <p className="text-xs text-gray-500 mt-1">
+              Waste Rate: {Math.round((totalWasteUnits / (totalProdUnits + totalWasteUnits)) * 100)}%
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* On-screen log */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center justify-between">
+            Today&apos;s Log
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={handlePrint}
+            >
+              <Printer className="h-3 w-3 mr-1" />
+              Print
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
         {productionEntries.map((entry) => {
           const isExpanded = expandedId === entry.id;
           const isEditing = editingId === entry.id;
@@ -628,5 +748,6 @@ function TodayLog({ onUpdate }: { onUpdate: () => void }) {
         })}
       </CardContent>
     </Card>
+    </>
   );
 }
