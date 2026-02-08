@@ -1,0 +1,125 @@
+'use client';
+
+import { Employee, InventoryItem, ProductionEntry, WasteEntry, WeeklyCount } from '@/types';
+import { DEFAULT_INVENTORY } from '@/data/inventory';
+
+const KEYS = {
+  employees: 'keiths-employees',
+  inventory: 'keiths-inventory-items',
+  production: 'keiths-production-entries',
+  waste: 'keiths-waste-entries',
+  weeklyCounts: 'keiths-weekly-counts',
+} as const;
+
+function getItem<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setItem<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// Employees
+export function getEmployees(): Employee[] {
+  return getItem<Employee[]>(KEYS.employees, []);
+}
+
+export function saveEmployees(employees: Employee[]): void {
+  setItem(KEYS.employees, employees);
+}
+
+export function addEmployee(employee: Employee): void {
+  const employees = getEmployees();
+  employees.push(employee);
+  saveEmployees(employees);
+}
+
+export function removeEmployee(id: string): void {
+  const employees = getEmployees().filter((e) => e.id !== id);
+  saveEmployees(employees);
+}
+
+// Inventory
+export function getInventory(): InventoryItem[] {
+  const items = getItem<InventoryItem[]>(KEYS.inventory, []);
+  if (items.length === 0) {
+    setItem(KEYS.inventory, DEFAULT_INVENTORY);
+    return DEFAULT_INVENTORY;
+  }
+  return items;
+}
+
+export function saveInventory(items: InventoryItem[]): void {
+  setItem(KEYS.inventory, items);
+}
+
+export function updateInventoryItem(item: InventoryItem): void {
+  const items = getInventory();
+  const idx = items.findIndex((i) => i.id === item.id);
+  if (idx >= 0) {
+    items[idx] = item;
+    saveInventory(items);
+  }
+}
+
+// Production Entries
+export function getProductionEntries(): ProductionEntry[] {
+  return getItem<ProductionEntry[]>(KEYS.production, []);
+}
+
+export function saveProductionEntry(entry: ProductionEntry): void {
+  const entries = getProductionEntries();
+  entries.push(entry);
+  setItem(KEYS.production, entries);
+}
+
+export function getProductionEntriesByDate(date: string): ProductionEntry[] {
+  return getProductionEntries().filter((e) => e.date === date);
+}
+
+// Waste Entries
+export function getWasteEntries(): WasteEntry[] {
+  return getItem<WasteEntry[]>(KEYS.waste, []);
+}
+
+export function saveWasteEntry(entry: WasteEntry): void {
+  const entries = getWasteEntries();
+  entries.push(entry);
+  setItem(KEYS.waste, entries);
+}
+
+export function getWasteEntriesByDate(date: string): WasteEntry[] {
+  return getWasteEntries().filter((e) => e.date === date);
+}
+
+// Weekly Counts
+export function getWeeklyCounts(): WeeklyCount[] {
+  return getItem<WeeklyCount[]>(KEYS.weeklyCounts, []);
+}
+
+export function saveWeeklyCount(count: WeeklyCount): void {
+  const counts = getWeeklyCounts();
+  const idx = counts.findIndex((c) => c.id === count.id);
+  if (idx >= 0) {
+    counts[idx] = count;
+  } else {
+    counts.push(count);
+  }
+  setItem(KEYS.weeklyCounts, counts);
+}
+
+// Utility
+export function getTodayStr(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+export function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
