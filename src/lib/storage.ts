@@ -84,6 +84,20 @@ export function getProductionEntriesByDate(date: string): ProductionEntry[] {
   return getProductionEntries().filter((e) => e.date === date);
 }
 
+export function deleteProductionEntry(id: string): void {
+  const entries = getProductionEntries().filter((e) => e.id !== id);
+  setItem(KEYS.production, entries);
+}
+
+export function updateProductionEntry(updated: ProductionEntry): void {
+  const entries = getProductionEntries();
+  const idx = entries.findIndex((e) => e.id === updated.id);
+  if (idx >= 0) {
+    entries[idx] = updated;
+    setItem(KEYS.production, entries);
+  }
+}
+
 // Waste Entries
 export function getWasteEntries(): WasteEntry[] {
   return getItem<WasteEntry[]>(KEYS.waste, []);
@@ -97,6 +111,20 @@ export function saveWasteEntry(entry: WasteEntry): void {
 
 export function getWasteEntriesByDate(date: string): WasteEntry[] {
   return getWasteEntries().filter((e) => e.date === date);
+}
+
+export function deleteWasteEntry(id: string): void {
+  const entries = getWasteEntries().filter((e) => e.id !== id);
+  setItem(KEYS.waste, entries);
+}
+
+export function updateWasteEntry(updated: WasteEntry): void {
+  const entries = getWasteEntries();
+  const idx = entries.findIndex((e) => e.id === updated.id);
+  if (idx >= 0) {
+    entries[idx] = updated;
+    setItem(KEYS.waste, entries);
+  }
 }
 
 // Weekly Counts

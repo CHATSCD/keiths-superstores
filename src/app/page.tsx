@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { ClipboardList, Trash2, FileText, PenLine } from 'lucide-react';
+import {
+  ClipboardList,
+  Trash2,
+  FileText,
+  PenLine,
+  ChevronDown,
+  ChevronUp,
+  Edit2,
+  X,
+  Check,
+} from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import Scanner from '@/components/Scanner';
@@ -10,11 +20,17 @@ import ManualEntryForm from '@/components/ManualEntryForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   getProductionEntriesByDate,
   getWasteEntriesByDate,
   saveProductionEntry,
   saveWasteEntry,
+  deleteProductionEntry,
+  deleteWasteEntry,
+  updateProductionEntry,
+  updateWasteEntry,
   getEmployees,
   getTodayStr,
   generateId,
@@ -28,6 +44,7 @@ export default function HomePage() {
   const [todayProduction, setTodayProduction] = useState(0);
   const [todayWaste, setTodayWaste] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [logKey, setLogKey] = useState(0);
 
   const refreshStats = useCallback(() => {
     const today = getTodayStr();
@@ -44,6 +61,7 @@ export default function HomePage() {
     );
     setTodayProduction(totalProd);
     setTodayWaste(totalWaste);
+    setLogKey((k) => k + 1);
   }, []);
 
   useEffect(() => {
@@ -264,7 +282,7 @@ export default function HomePage() {
         </Tabs>
 
         {/* Today's Log */}
-        <TodayLog />
+        <TodayLog key={logKey} onUpdate={refreshStats} />
       </main>
 
       <BottomNav />
@@ -272,58 +290,342 @@ export default function HomePage() {
   );
 }
 
-function TodayLog() {
-  const [entries, setEntries] = useState<{ production: ProductionEntry[]; waste: WasteEntry[] }>({
-    production: [],
-    waste: [],
-  });
+// ============ TODAY'S LOG WITH EDIT/DELETE ============
 
-  useEffect(() => {
+function TodayLog({ onUpdate }: { onUpdate: () => void }) {
+  const [productionEntries, setProductionEntries] = useState<ProductionEntry[]>([]);
+  const [wasteEntries, setWasteEntries] = useState<WasteEntry[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const reload = useCallback(() => {
     const today = getTodayStr();
-    setEntries({
-      production: getProductionEntriesByDate(today),
-      waste: getWasteEntriesByDate(today),
-    });
+    setProductionEntries(getProductionEntriesByDate(today));
+    setWasteEntries(getWasteEntriesByDate(today));
   }, []);
 
-  if (entries.production.length === 0 && entries.waste.length === 0) return null;
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const handleDeleteProduction = (id: string) => {
+    deleteProductionEntry(id);
+    reload();
+    onUpdate();
+    setConfirmDeleteId(null);
+    setExpandedId(null);
+  };
+
+  const handleDeleteWaste = (id: string) => {
+    deleteWasteEntry(id);
+    reload();
+    onUpdate();
+    setConfirmDeleteId(null);
+    setExpandedId(null);
+  };
+
+  const handleUpdateProductionQty = (entryId: string, itemIdx: number, newQty: number) => {
+    const entry = productionEntries.find((e) => e.id === entryId);
+    if (!entry) return;
+    const updated = { ...entry, items: [...entry.items] };
+    updated.items[itemIdx] = { ...updated.items[itemIdx], quantity: newQty };
+    updateProductionEntry(updated);
+    reload();
+    onUpdate();
+  };
+
+  const handleUpdateWasteQty = (entryId: string, itemIdx: number, newQty: number) => {
+    const entry = wasteEntries.find((e) => e.id === entryId);
+    if (!entry) return;
+    const updated = { ...entry, items: [...entry.items] };
+    updated.items[itemIdx] = { ...updated.items[itemIdx], quantity: newQty };
+    updateWasteEntry(updated);
+    reload();
+    onUpdate();
+  };
+
+  const handleRemoveProductionItem = (entryId: string, itemIdx: number) => {
+    const entry = productionEntries.find((e) => e.id === entryId);
+    if (!entry) return;
+    const updated = { ...entry, items: entry.items.filter((_, i) => i !== itemIdx) };
+    if (updated.items.length === 0) {
+      deleteProductionEntry(entryId);
+    } else {
+      updateProductionEntry(updated);
+    }
+    reload();
+    onUpdate();
+  };
+
+  const handleRemoveWasteItem = (entryId: string, itemIdx: number) => {
+    const entry = wasteEntries.find((e) => e.id === entryId);
+    if (!entry) return;
+    const updated = { ...entry, items: entry.items.filter((_, i) => i !== itemIdx) };
+    if (updated.items.length === 0) {
+      deleteWasteEntry(entryId);
+    } else {
+      updateWasteEntry(updated);
+    }
+    reload();
+    onUpdate();
+  };
+
+  if (productionEntries.length === 0 && wasteEntries.length === 0) return null;
 
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Today&apos;s Log</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {entries.production.map((entry) => (
-          <div key={entry.id} className="bg-green-50 rounded-lg p-2.5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium">{entry.employeeName}</span>
-              <div className="flex gap-1.5">
-                <Badge variant="success">Production</Badge>
-                <Badge variant="outline">{entry.shift}</Badge>
+      <CardContent className="space-y-2">
+        {productionEntries.map((entry) => {
+          const isExpanded = expandedId === entry.id;
+          const isEditing = editingId === entry.id;
+          const isConfirmingDelete = confirmDeleteId === entry.id;
+          const totalUnits = entry.items.reduce((s, i) => s + i.quantity, 0);
+
+          return (
+            <div key={entry.id} className="bg-green-50 rounded-lg overflow-hidden border border-green-200">
+              <div
+                className="flex items-center justify-between p-2.5 cursor-pointer"
+                onClick={() => {
+                  setExpandedId(isExpanded ? null : entry.id);
+                  setEditingId(null);
+                  setConfirmDeleteId(null);
+                }}
+              >
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium">{entry.employeeName}</span>
+                  <div className="text-xs text-muted-foreground">
+                    {entry.items.length} items, {totalUnits} units
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="success">Production</Badge>
+                  <Badge variant="outline">{entry.shift}</Badge>
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
               </div>
+
+              {isExpanded && (
+                <div className="border-t border-green-200 p-2.5 space-y-2">
+                  {/* Items list */}
+                  <div className="space-y-1">
+                    {entry.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-sm">
+                        <span className="flex-1 truncate">{item.itemName}</span>
+                        {isEditing ? (
+                          <>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleUpdateProductionQty(entry.id, idx, parseInt(e.target.value) || 0)
+                              }
+                              className="w-16 h-7 text-center text-sm"
+                              min={0}
+                            />
+                            <button
+                              onClick={() => handleRemoveProductionItem(entry.id, idx)}
+                              className="text-red-400 hover:text-red-600"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground tabular-nums">{item.quantity}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-1">
+                    {isConfirmingDelete ? (
+                      <>
+                        <span className="text-xs text-red-600 flex-1 self-center">Delete this entry?</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-7 text-xs"
+                          onClick={() => handleDeleteProduction(entry.id)}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs flex-1"
+                          onClick={() => setEditingId(isEditing ? null : entry.id)}
+                        >
+                          {isEditing ? (
+                            <>
+                              <Check className="h-3 w-3 mr-1" />
+                              Done
+                            </>
+                          ) : (
+                            <>
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              Edit
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                          onClick={() => setConfirmDeleteId(entry.id)}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="text-xs text-muted-foreground">
-              {entry.items.length} items, {entry.items.reduce((s, i) => s + i.quantity, 0)} total
-              units
-            </div>
-          </div>
-        ))}
-        {entries.waste.map((entry) => (
-          <div key={entry.id} className="bg-red-50 rounded-lg p-2.5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium">{entry.employeeName}</span>
-              <div className="flex gap-1.5">
-                <Badge variant="danger">Waste</Badge>
-                <Badge variant="outline">{entry.shift}</Badge>
+          );
+        })}
+
+        {wasteEntries.map((entry) => {
+          const isExpanded = expandedId === entry.id;
+          const isEditing = editingId === entry.id;
+          const isConfirmingDelete = confirmDeleteId === entry.id;
+          const totalUnits = entry.items.reduce((s, i) => s + i.quantity, 0);
+
+          return (
+            <div key={entry.id} className="bg-red-50 rounded-lg overflow-hidden border border-red-200">
+              <div
+                className="flex items-center justify-between p-2.5 cursor-pointer"
+                onClick={() => {
+                  setExpandedId(isExpanded ? null : entry.id);
+                  setEditingId(null);
+                  setConfirmDeleteId(null);
+                }}
+              >
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium">{entry.employeeName}</span>
+                  <div className="text-xs text-muted-foreground">
+                    {entry.items.length} items, {totalUnits} units
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="danger">Waste</Badge>
+                  <Badge variant="outline">{entry.shift}</Badge>
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
               </div>
+
+              {isExpanded && (
+                <div className="border-t border-red-200 p-2.5 space-y-2">
+                  <div className="space-y-1">
+                    {entry.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-sm">
+                        <span className="flex-1 truncate">{item.itemName}</span>
+                        {isEditing ? (
+                          <>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleUpdateWasteQty(entry.id, idx, parseInt(e.target.value) || 0)
+                              }
+                              className="w-16 h-7 text-center text-sm"
+                              min={0}
+                            />
+                            <button
+                              onClick={() => handleRemoveWasteItem(entry.id, idx)}
+                              className="text-red-400 hover:text-red-600"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground tabular-nums">{item.quantity}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    {isConfirmingDelete ? (
+                      <>
+                        <span className="text-xs text-red-600 flex-1 self-center">Delete this entry?</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-7 text-xs"
+                          onClick={() => handleDeleteWaste(entry.id)}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs flex-1"
+                          onClick={() => setEditingId(isEditing ? null : entry.id)}
+                        >
+                          {isEditing ? (
+                            <>
+                              <Check className="h-3 w-3 mr-1" />
+                              Done
+                            </>
+                          ) : (
+                            <>
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              Edit
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                          onClick={() => setConfirmDeleteId(entry.id)}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="text-xs text-muted-foreground">
-              {entry.items.length} items, {entry.items.reduce((s, i) => s + i.quantity, 0)} total
-              units
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );
