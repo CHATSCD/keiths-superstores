@@ -56,20 +56,48 @@ body {
 
 /* Print styles */
 @media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
   .no-print {
     display: none !important;
   }
+
   .print-only {
     display: block !important;
   }
+
   body {
-    padding: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
   img {
     display: inline-block !important;
     visibility: visible !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
   }
 }
 
