@@ -10,10 +10,11 @@ import { Input } from '@/components/ui/input';
 import QRCodeCanvas from '@/components/QRCodeCanvas';
 import { CATEGORIES } from '@/data/inventory';
 import {
-  getEnabledItems,
+  getEnabledForSheets,
   getBubbleConfig,
   saveBubbleConfig,
   getTodayStr,
+  getLocationName,
 } from '@/lib/storage';
 import { InventoryItem, BubbleConfig, WASTE_REASONS } from '@/types';
 
@@ -24,10 +25,12 @@ export default function PrintPage() {
   const [showConfig, setShowConfig] = useState(false);
   const [employeeName, setEmployeeName] = useState('');
   const [shift, setShift] = useState<'AM' | 'PM' | 'Night'>('AM');
+  const [locationName, setLocationName] = useState('');
 
   useEffect(() => {
-    setItems(getEnabledItems());
+    setItems(getEnabledForSheets());
     setConfig(getBubbleConfig());
+    setLocationName(getLocationName());
   }, []);
 
   const handleConfigChange = (field: keyof BubbleConfig, value: number) => {
@@ -186,8 +189,20 @@ export default function PrintPage() {
             <p>{items.length} enabled items across {categories.length} categories</p>
             <p>{bubbleCount} bubbles per row, increment of {config.increment}</p>
             {formType === 'waste' && <p>Includes REASON column with code legend</p>}
+            {locationName && <p className="font-semibold text-purple-700 mt-1">Location: {locationName}</p>}
           </CardContent>
         </Card>
+
+        {items.length === 0 && (
+          <Card className="border-2 border-yellow-200 bg-yellow-50">
+            <CardContent className="p-3">
+              <p className="text-sm font-medium text-yellow-900">No Items Enabled!</p>
+              <p className="text-xs text-yellow-700 mt-1">
+                Go to Store Items to enable the items available at your location. Only enabled items will appear on your sheets.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Print Button */}
         <Button
@@ -207,6 +222,9 @@ export default function PrintPage() {
             <div className="text-center flex-1">
               <h1 className="text-lg font-bold">Keith&apos;s Superstores</h1>
               <p className="text-xs text-gray-500 italic">&ldquo;The Fastest And Friendliest&rdquo;</p>
+              {locationName && (
+                <p className="text-sm font-semibold text-purple-700">{locationName}</p>
+              )}
               <h2 className="text-base font-semibold mt-1">
                 {formType === 'production' ? 'PRODUCTION SHEET' : 'WASTE SHEET'}
               </h2>
