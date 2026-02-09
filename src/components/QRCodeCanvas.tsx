@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 
 interface QRCodeCanvasProps {
@@ -9,17 +9,20 @@ interface QRCodeCanvasProps {
 }
 
 export default function QRCodeCanvas({ data, size = 100 }: QRCodeCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [src, setSrc] = useState<string>('');
 
   useEffect(() => {
-    if (canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, data, {
-        width: size,
-        margin: 1,
-        color: { dark: '#000000', light: '#ffffff' },
-      });
-    }
+    QRCode.toDataURL(data, {
+      width: size,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' },
+    }).then(setSrc);
   }, [data, size]);
 
-  return <canvas ref={canvasRef} />;
+  if (!src) return null;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="QR Code" width={size} height={size} style={{ imageRendering: 'pixelated' }} />
+  );
 }
