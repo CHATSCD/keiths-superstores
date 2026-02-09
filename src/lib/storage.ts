@@ -1,6 +1,6 @@
 'use client';
 
-import { Employee, InventoryItem, ProductionEntry, WasteEntry, WeeklyCount } from '@/types';
+import { Employee, InventoryItem, ProductionEntry, WasteEntry, WeeklyCount, BubbleConfig } from '@/types';
 import { DEFAULT_INVENTORY } from '@/data/inventory';
 
 const KEYS = {
@@ -9,6 +9,8 @@ const KEYS = {
   production: 'keiths-production-entries',
   waste: 'keiths-waste-entries',
   weeklyCounts: 'keiths-weekly-counts',
+  enabledItems: 'keiths-enabled-items',
+  bubbleConfig: 'keiths-bubble-config',
 } as const;
 
 function getItem<T>(key: string, fallback: T): T {
@@ -67,6 +69,61 @@ export function updateInventoryItem(item: InventoryItem): void {
     items[idx] = item;
     saveInventory(items);
   }
+}
+
+export function addCustomItem(item: InventoryItem): void {
+  const items = getInventory();
+  items.push(item);
+  saveInventory(items);
+}
+
+export function deleteCustomItem(id: string): void {
+  const items = getInventory().filter((i) => i.id !== id);
+  saveInventory(items);
+  // Also remove from enabled items
+  const enabled = getEnabledItemIds();
+  const updated = enabled.filter((eid) => eid !== id);
+  setItem(KEYS.enabledItems, updated);
+}
+
+// Enabled Items (store item toggles)
+export function getEnabledItemIds(): string[] {
+  const stored = getItem<string[] | null>(KEYS.enabledItems, null);
+  if (stored === null) {
+    // Default: all items enabled
+    const allIds = getInventory().map((i) => i.id);
+    setItem(KEYS.enabledItems, allIds);
+    return allIds;
+  }
+  return stored;
+}
+
+export function setEnabledItemIds(ids: string[]): void {
+  setItem(KEYS.enabledItems, ids);
+}
+
+export function toggleItemEnabled(itemId: string): void {
+  const enabled = getEnabledItemIds();
+  if (enabled.includes(itemId)) {
+    setItem(KEYS.enabledItems, enabled.filter((id) => id !== itemId));
+  } else {
+    setItem(KEYS.enabledItems, [...enabled, itemId]);
+  }
+}
+
+export function getEnabledItems(): InventoryItem[] {
+  const all = getInventory();
+  const enabledIds = getEnabledItemIds();
+  return all.filter((item) => enabledIds.includes(item.id));
+}
+
+// Bubble Config
+export function getBubbleConfig(): BubbleConfig {
+  return getItem<BubbleConfig>(KEYS.bubbleConfig, { increment: 1, maxQuantity: 30 });
+}
+
+export function saveBubbleConfig(config: BubbleConfig): void {
+  setItem(KEYS.bubbleConfig, config);
 }
 
 // Production Entries
@@ -152,6 +209,8 @@ export interface BackupData {
   production: ProductionEntry[];
   waste: WasteEntry[];
   weeklyCounts: WeeklyCount[];
+  enabledItems?: string[];
+  bubbleConfig?: BubbleConfig;
 }
 
 export function exportAllData(): BackupData {
@@ -163,6 +222,8 @@ export function exportAllData(): BackupData {
     production: getProductionEntries(),
     waste: getWasteEntries(),
     weeklyCounts: getWeeklyCounts(),
+    enabledItems: getEnabledItemIds(),
+    bubbleConfig: getBubbleConfig(),
   };
 }
 
@@ -176,6 +237,8 @@ export function importAllData(data: BackupData): { success: boolean; error?: str
     if (data.production) setItem(KEYS.production, data.production);
     if (data.waste) setItem(KEYS.waste, data.waste);
     if (data.weeklyCounts) setItem(KEYS.weeklyCounts, data.weeklyCounts);
+    if (data.enabledItems) setItem(KEYS.enabledItems, data.enabledItems);
+    if (data.bubbleConfig) setItem(KEYS.bubbleConfig, data.bubbleConfig);
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Import failed' };

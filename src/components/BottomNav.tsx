@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, LayoutDashboard } from 'lucide-react';
+import { Home, ClipboardList, Trash2, Settings, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function BottomNav() {
@@ -11,7 +11,10 @@ export default function BottomNav() {
 
   const items = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/manager', icon: LayoutDashboard, label: 'Manager' },
+    { href: '/production', icon: ClipboardList, label: 'Production' },
+    { href: '/waste', icon: Trash2, label: 'Waste' },
+    { href: '/store-items', icon: Settings, label: 'Items' },
+    { href: '/print', icon: Printer, label: 'Print' },
   ];
 
   return (
@@ -24,7 +27,7 @@ export default function BottomNav() {
               key={item.href}
               onClick={() => router.push(item.href)}
               className={cn(
-                'flex-1 flex flex-col items-center py-2 px-4 text-xs transition-colors',
+                'flex-1 flex flex-col items-center py-2 px-1 text-[10px] transition-colors',
                 isActive ? 'text-keiths-red' : 'text-gray-500 hover:text-gray-700'
               )}
             >
