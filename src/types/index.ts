@@ -12,6 +12,7 @@ export interface InventoryItem {
   category: string;
   parLevel: number;
   unit: string;
+  custom?: boolean;
 }
 
 export interface ProductionEntry {
@@ -32,6 +33,25 @@ export interface ProductionLineItem {
   confidence?: number;
 }
 
+export type WasteReason =
+  | 'overcooked'
+  | 'expired'
+  | 'dropped'
+  | 'damaged'
+  | 'customer-return'
+  | 'quality-issue'
+  | 'other';
+
+export const WASTE_REASONS: { code: WasteReason; label: string; emoji: string; short: string }[] = [
+  { code: 'overcooked', label: 'Overcooked', emoji: '\uD83D\uDD25', short: 'OC' },
+  { code: 'expired', label: 'Expired', emoji: '\u23F0', short: 'EX' },
+  { code: 'dropped', label: 'Dropped', emoji: '\uD83D\uDCA5', short: 'DR' },
+  { code: 'damaged', label: 'Damaged', emoji: '\uD83D\uDCE6', short: 'DM' },
+  { code: 'customer-return', label: 'Customer Return', emoji: '\u21A9\uFE0F', short: 'CR' },
+  { code: 'quality-issue', label: 'Quality Issue', emoji: '\u26A0\uFE0F', short: 'QI' },
+  { code: 'other', label: 'Other', emoji: '\uD83D\uDCDD', short: 'OT' },
+];
+
 export interface WasteEntry {
   id: string;
   date: string;
@@ -47,7 +67,7 @@ export interface WasteLineItem {
   itemId: string;
   itemName: string;
   quantity: number;
-  reason?: string;
+  reason?: WasteReason;
   confidence?: number;
 }
 
@@ -108,6 +128,11 @@ export interface OrderSuggestion {
   suggestion: string;
   suggestedOrder: number;
   priority: 'high' | 'medium' | 'low';
+}
+
+export interface BubbleConfig {
+  increment: number;
+  maxQuantity: number;
 }
 
 export type ScanStage = 'idle' | 'preprocessing' | 'scanning' | 'processing' | 'complete' | 'error';
