@@ -22,6 +22,8 @@ export default function PrintPage() {
   const [config, setConfig] = useState<BubbleConfig>({ increment: 1, maxQuantity: 30 });
   const [formType, setFormType] = useState<'production' | 'waste'>('production');
   const [showConfig, setShowConfig] = useState(false);
+  const [employeeName, setEmployeeName] = useState('');
+  const [shift, setShift] = useState<'AM' | 'PM' | 'Night'>('AM');
 
   useEffect(() => {
     setItems(getEnabledItems());
@@ -81,6 +83,52 @@ export default function PrintPage() {
             Waste Form
           </button>
         </div>
+
+        {/* Employee Info */}
+        <Card className="border-2 border-blue-200">
+          <CardContent className="p-3 space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Employee Name</label>
+            <Input
+              type="text"
+              placeholder="Enter employee name"
+              value={employeeName}
+              onChange={(e) => setEmployeeName(e.target.value)}
+            />
+            <label className="text-xs font-medium text-muted-foreground">Shift</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShift('AM')}
+                className={`flex-1 py-2 rounded text-sm font-medium border transition-colors ${
+                  shift === 'AM'
+                    ? 'bg-keiths-red text-white border-keiths-red'
+                    : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                AM
+              </button>
+              <button
+                onClick={() => setShift('PM')}
+                className={`flex-1 py-2 rounded text-sm font-medium border transition-colors ${
+                  shift === 'PM'
+                    ? 'bg-keiths-red text-white border-keiths-red'
+                    : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                PM
+              </button>
+              <button
+                onClick={() => setShift('Night')}
+                className={`flex-1 py-2 rounded text-sm font-medium border transition-colors ${
+                  shift === 'Night'
+                    ? 'bg-keiths-red text-white border-keiths-red'
+                    : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                Night
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Config */}
         <Button
@@ -168,6 +216,8 @@ export default function PrintPage() {
               <QRCodeCanvas
                 data={JSON.stringify({
                   type: formType,
+                  employeeName: employeeName,
+                  shift: shift,
                   date: getTodayStr(),
                   items: items.length,
                   increment: config.increment,
@@ -179,10 +229,10 @@ export default function PrintPage() {
           </div>
           <div className="flex gap-8 mt-2 text-sm">
             <div className="flex-1 border-b border-black pb-1 text-left">
-              <strong>Employee:</strong> _________________________
+              <strong>Employee:</strong> {employeeName || '_________________________'}
             </div>
             <div className="border-b border-black pb-1">
-              <strong>Shift:</strong> AM / PM / ON
+              <strong>Shift:</strong> {shift || 'AM / PM / ON'}
             </div>
           </div>
         </div>

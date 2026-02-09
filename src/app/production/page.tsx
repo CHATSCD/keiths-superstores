@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Minus, Plus, Save, Check } from 'lucide-react';
+import { Minus, Plus, Save, Check, ScanLine, Edit3 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import Scanner from '@/components/Scanner';
+import OcrResults from '@/components/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +18,8 @@ import {
   generateId,
   getTodayStr,
 } from '@/lib/storage';
-import { InventoryItem, Employee, ProductionEntry } from '@/types';
+import { InventoryItem, Employee, ProductionEntry, OcrResult } from '@/types';
+import { QRCodeData } from '@/lib/ocr';
 
 export default function ProductionPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -27,6 +30,9 @@ export default function ProductionPage() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [saved, setSaved] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [mode, setMode] = useState<'manual' | 'scan'>('manual');
+  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+  const [qrData, setQrData] = useState<QRCodeData | null>(null);
 
   useEffect(() => {
     setItems(getEnabledItems());
@@ -69,6 +75,32 @@ export default function ProductionPage() {
   const totalItems = Object.keys(quantities).length;
   const totalUnits = Object.values(quantities).reduce((s, q) => s + q, 0);
 
+  const handleScanComplete = useCallback((result: OcrResult, qr: QRCodeData | null) => {
+    setOcrResult(result);
+    setQrData(qr);
+
+    // Auto-populate from QR code if available
+    if (qr) {
+      setEmployeeName(qr.employeeName);
+      setShift(qr.shift);
+      setDate(qr.date);
+    } else if (result.employeeName) {
+      setEmployeeName(result.employeeName);
+    }
+    if (result.shift) {
+      setShift(result.shift);
+    }
+
+    // Populate quantities from OCR results
+    const newQty: Record<string, number> = {};
+    result.items.forEach((item) => {
+      if (item.matchedItemId && item.quantity > 0) {
+        newQty[item.matchedItemId] = item.quantity;
+      }
+    });
+    setQuantities(newQty);
+  }, []);
+
   const handleSave = () => {
     if (!employeeName.trim() || totalItems === 0) return;
 
@@ -86,11 +118,13 @@ export default function ProductionPage() {
           quantity: qty,
         })),
       createdAt: new Date().toISOString(),
-      source: 'manual',
+      source: mode === 'scan' ? 'ocr' : 'manual',
     };
 
     saveProductionEntry(entry);
     setQuantities({});
+    setOcrResult(null);
+    setQrData(null);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -108,6 +142,72 @@ export default function ProductionPage() {
           </div>
         )}
 
+        {/* Mode Tabs */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode('manual')}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-2 ${
+              mode === 'manual'
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white text-gray-700 border-gray-200'
+            }`}
+          >
+            <Edit3 className="h-4 w-4" />
+            Manual Entry
+          </button>
+          <button
+            onClick={() => setMode('scan')}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-2 ${
+              mode === 'scan'
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white text-gray-700 border-gray-200'
+            }`}
+          >
+            <ScanLine className="h-4 w-4" />
+            Scan/Upload
+          </button>
+        </div>
+
+        {/* Scanner Mode */}
+        {mode === 'scan' && !ocrResult && (
+          <Scanner onScanComplete={handleScanComplete} />
+        )}
+
+        {/* OCR Results Review */}
+        {mode === 'scan' && ocrResult && (
+          <OcrResults
+            result={ocrResult}
+            type="production"
+            onConfirm={(updatedResult) => {
+              // Update with edited results
+              setEmployeeName(updatedResult.employeeName);
+              if (updatedResult.shift) {
+                setShift(updatedResult.shift);
+              }
+
+              // Update quantities with edited results
+              const newQty: Record<string, number> = {};
+              updatedResult.items.forEach((item) => {
+                if (item.matchedItemId && item.quantity > 0) {
+                  newQty[item.matchedItemId] = item.quantity;
+                }
+              });
+              setQuantities(newQty);
+
+              // Clear OCR result to show manual form for final review
+              setOcrResult(null);
+            }}
+            onDiscard={() => {
+              setOcrResult(null);
+              setQrData(null);
+              setQuantities({});
+            }}
+          />
+        )}
+
+        {/* Manual Entry Mode or After Scan */}
+        {(mode === 'manual' || (mode === 'scan' && ocrResult)) && (
+          <>
         {/* Entry Header */}
         <Card>
           <CardContent className="p-3 space-y-3">
@@ -237,6 +337,8 @@ export default function ProductionPage() {
             Save Report ({totalItems} items, {totalUnits} units)
           </Button>
         </div>
+          </>
+        )}
       </main>
       <BottomNav />
     </div>

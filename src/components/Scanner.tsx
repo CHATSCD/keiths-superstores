@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useRef, useState, useCallback } from 'react';
-import { Camera, Upload, Loader2, CheckCircle2, AlertCircle, RotateCcw } from 'lucide-react';
+import { Camera, Upload, Loader2, CheckCircle2, AlertCircle, RotateCcw, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { performOcr } from '@/lib/ocr';
+import { performOcr, decodeQRCode, QRCodeData } from '@/lib/ocr';
 import { getInventory } from '@/lib/storage';
 import { OcrResult, ScanStage } from '@/types';
 
 interface ScannerProps {
-  onScanComplete: (result: OcrResult) => void;
+  onScanComplete: (result: OcrResult, qrData: QRCodeData | null) => void;
 }
 
 const STAGE_LABELS: Record<ScanStage, string> = {
@@ -38,15 +38,34 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [qrCodeDetected, setQrCodeDetected] = useState<QRCodeData | null>(null);
+
   const handleImage = useCallback(async (dataUrl: string) => {
     setPreview(dataUrl);
     setError(null);
+    setQrCodeDetected(null);
+
     try {
+      // First, try to decode QR code
+      setStage('preprocessing');
+      const qrData = await decodeQRCode(dataUrl);
+      if (qrData) {
+        setQrCodeDetected(qrData);
+      }
+
+      // Then perform OCR on the rest of the sheet
       const inventory = getInventory();
       const result = await performOcr(dataUrl, inventory, setStage);
-      onScanComplete(result);
+
+      // If QR code was found, override employee name and shift
+      if (qrData) {
+        result.employeeName = qrData.employeeName;
+        result.shift = qrData.shift;
+      }
+
+      onScanComplete(result, qrData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'OCR scan failed');
+      setError(err instanceof Error ? err.message : 'Scan failed');
       setStage('error');
     }
   }, [onScanComplete]);
@@ -71,6 +90,7 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
     setStage('idle');
     setPreview(null);
     setError(null);
+    setQrCodeDetected(null);
   };
 
   const isScanning = stage !== 'idle' && stage !== 'complete' && stage !== 'error';
@@ -124,6 +144,21 @@ export default function Scanner({ onScanComplete }: ScannerProps) {
               <Loader2 className="h-8 w-8 text-white animate-spin" />
             </div>
           )}
+        </div>
+      )}
+
+      {/* QR Code Detection Badge */}
+      {qrCodeDetected && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-green-700">
+            <QrCode className="h-5 w-5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold">QR Code Detected!</p>
+              <p className="text-xs">
+                {qrCodeDetected.type === 'production' ? 'Production' : 'Waste'} Sheet - {qrCodeDetected.employeeName} ({qrCodeDetected.shift})
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
