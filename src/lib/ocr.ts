@@ -1,6 +1,53 @@
 'use client';
 
 import { OcrResult, OcrLineItem, InventoryItem, ScanStage } from '@/types';
+import jsQR from 'jsqr';
+
+// QR Code data structure
+export interface QRCodeData {
+  type: 'production' | 'waste';
+  employeeName: string;
+  shift: 'AM' | 'PM' | 'Night';
+  date: string;
+  items: number;
+  increment: number;
+  maxQty: number;
+}
+
+// Decode QR code from image
+export async function decodeQRCode(imageData: string): Promise<QRCodeData | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+      if (code && code.data) {
+        try {
+          const parsed = JSON.parse(code.data) as QRCodeData;
+          resolve(parsed);
+        } catch {
+          resolve(null);
+        }
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = imageData;
+  });
+}
 
 // Levenshtein distance
 function levenshtein(a: string, b: string): number {
