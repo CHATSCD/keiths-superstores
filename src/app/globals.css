@@ -64,6 +64,12 @@ body {
   }
   body {
     padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  img {
+    display: inline-block !important;
+    visibility: visible !important;
   }
 }
 
