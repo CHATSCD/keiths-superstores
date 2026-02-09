@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardCheck, Search, Printer, Save, Package } from 'lucide-react';
+import { ClipboardCheck, Search, Printer, Save, Package, Plus, Minus } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { CATEGORIES } from '@/data/inventory';
-import { getEnabledForInventory, getLocationName } from '@/lib/storage';
+import { getEnabledForInventory, getLocationName, getInventory, saveInventory } from '@/lib/storage';
 import { InventoryItem } from '@/types';
 
 export default function CountPage() {
@@ -31,6 +31,21 @@ export default function CountPage() {
       ...counts,
       [itemId]: Math.max(0, value),
     });
+  };
+
+  const updateParLevel = (itemId: string, newParLevel: number) => {
+    // Update local state
+    const updatedItems = items.map((item) =>
+      item.id === itemId ? { ...item, parLevel: Math.max(0, newParLevel) } : item
+    );
+    setItems(updatedItems);
+
+    // Update global inventory
+    const allInventory = getInventory();
+    const updatedInventory = allInventory.map((item) =>
+      item.id === itemId ? { ...item, parLevel: Math.max(0, newParLevel) } : item
+    );
+    saveInventory(updatedInventory);
   };
 
   const filteredItems = items.filter((item) => {
@@ -171,9 +186,9 @@ export default function CountPage() {
               </CardHeader>
               <CardContent className="pt-0 space-y-0.5">
                 {/* Column Headers */}
-                <div className="grid grid-cols-[1fr,60px,60px,60px] gap-2 py-1 border-b mb-2">
+                <div className="grid grid-cols-[1fr,80px,60px,60px] gap-2 py-1 border-b mb-2">
                   <span className="text-[10px] font-semibold text-gray-600">Item Name</span>
-                  <span className="text-[10px] font-semibold text-gray-600 text-center">Par</span>
+                  <span className="text-[10px] font-semibold text-gray-600 text-center">Par Level</span>
                   <span className="text-[10px] font-semibold text-gray-600 text-center">Count</span>
                   <span className="text-[10px] font-semibold text-gray-600 text-center">Order</span>
                 </div>
@@ -186,16 +201,34 @@ export default function CountPage() {
                   return (
                     <div
                       key={item.id}
-                      className={`grid grid-cols-[1fr,60px,60px,60px] gap-2 py-1.5 ${
+                      className={`grid grid-cols-[1fr,80px,60px,60px] gap-2 py-1.5 items-center ${
                         belowPar && counts[item.id] !== undefined ? 'bg-orange-50 rounded px-1' : ''
                       }`}
                     >
                       <span className="text-sm truncate pr-2">
                         {item.name}
                       </span>
-                      <span className="text-sm text-center text-gray-600">
-                        {item.parLevel}
-                      </span>
+                      <div className="flex items-center gap-0.5 justify-center">
+                        <button
+                          onClick={() => updateParLevel(item.id, item.parLevel - 1)}
+                          className="w-5 h-5 rounded border flex items-center justify-center hover:bg-gray-100 no-print"
+                        >
+                          <Minus className="h-2.5 w-2.5" />
+                        </button>
+                        <Input
+                          type="number"
+                          value={item.parLevel}
+                          onChange={(e) => updateParLevel(item.id, parseInt(e.target.value) || 0)}
+                          className="h-6 w-10 text-center text-xs p-0"
+                          min={0}
+                        />
+                        <button
+                          onClick={() => updateParLevel(item.id, item.parLevel + 1)}
+                          className="w-5 h-5 rounded border flex items-center justify-center hover:bg-gray-100 no-print"
+                        >
+                          <Plus className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
                       <Input
                         type="number"
                         value={counts[item.id] === undefined ? '' : counts[item.id]}
