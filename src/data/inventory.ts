@@ -39,7 +39,7 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Tacquito', 'Roller/Hot Case', 20),
   item('Mini Tacos', 'Roller/Hot Case', 24),
 
-  // Deli (15)
+  // Deli (23)
   item('Hamburger', 'Deli', 15),
   item('Cheeseburger', 'Deli', 15),
   item('Chicken Wings', 'Deli', 30, 'pieces'),
@@ -55,8 +55,16 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Ham Sandwich', 'Deli', 10),
   item('Turkey Sandwich', 'Deli', 10),
   item('Meatballs', 'Deli', 20),
+  item('Beef Ground Patty 3-1', 'Deli', 20),
+  item('Beef Philly Steak', 'Deli', 15),
+  item('Beef Pot Roast', 'Deli', 6),
+  item('Beef Sirloin Fillet 4oz', 'Deli', 12),
+  item('Beef Strip For Fajita', 'Deli', 15),
+  item('Egg Patty Fried', 'Deli', 30),
+  item('Fajita Vegetable Blend', 'Deli', 10, 'lbs'),
+  item('Philly Meat & Veggies', 'Deli', 10),
 
-  // Bakery (9)
+  // Bakery (30)
   item('Cinnamon Rolls', 'Bakery', 12),
   item('Cookies Large', 'Bakery', 18),
   item('Cookies Small', 'Bakery', 24),
@@ -66,6 +74,42 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Donuts Glazed', 'Bakery', 24),
   item('Donuts Filled', 'Bakery', 18),
   item('Cake Donuts', 'Bakery', 18),
+  item('Brownie Chocolate Chip Tray', 'Bakery', 6),
+  item('Danish Variety Pack', 'Bakery', 12),
+  item('Donut Apple Fritter', 'Bakery', 12),
+  item('Croissant', 'Bakery', 24),
+  item('Muffin Corn', 'Bakery', 18),
+  item('Muffin Cornbread Jalapeno', 'Bakery', 12),
+  item('Muffin Variety Pack', 'Bakery', 12),
+  item('Cookie Chocolate Chip Dough', 'Bakery', 20),
+  item('Cookie Chocolate Chunk Dough', 'Bakery', 20),
+  item('Cookie Oatmeal Raisin Dough', 'Bakery', 20),
+  item('Cookie Peanut Butter Dough', 'Bakery', 20),
+  item('Cookie Sugar Dough', 'Bakery', 20),
+  item('Turnover Apple', 'Bakery', 15),
+
+  // Cakes & Desserts (21)
+  item('Cake Chocolate Overload 10"', 'Cakes & Desserts', 4),
+  item('Cake Coconut Cloud 10"', 'Cakes & Desserts', 4),
+  item('Cake Red Velvet 9"', 'Cakes & Desserts', 4),
+  item('Cake Carrot', 'Cakes & Desserts', 4),
+  item('Cake Lemon Italian Cream', 'Cakes & Desserts', 4),
+  item('Cake Limoncello Mascarpone', 'Cakes & Desserts', 4),
+  item('Cake Banana Foster', 'Cakes & Desserts', 4),
+  item('Cheesecake Cinnamon Churro', 'Cakes & Desserts', 4),
+  item('Pie Pecan 10"', 'Cakes & Desserts', 6),
+  item('Pie Mini Chocolate Cream', 'Cakes & Desserts', 12),
+  item('Pie Mini Coconut Cream', 'Cakes & Desserts', 12),
+  item('Pie Mini Banana Cream', 'Cakes & Desserts', 12),
+  item('Pie Mini Strawberry Cream', 'Cakes & Desserts', 12),
+  item('Cobbler Apple', 'Cakes & Desserts', 6),
+  item('Cobbler Blackberry', 'Cakes & Desserts', 6),
+  item('Cobbler Cherry', 'Cakes & Desserts', 6),
+  item('Cobbler Peach', 'Cakes & Desserts', 6),
+  item('Cobbler Pecan Deep Dish', 'Cakes & Desserts', 6),
+  item('Flan 4oz Cup', 'Cakes & Desserts', 24),
+  item('Pretzel Soft King', 'Cakes & Desserts', 15),
+  item('Pretzel Bavarian Bite', 'Cakes & Desserts', 30),
 
   // Branded Pizza (8)
   item('Whole Pizza', 'Branded Pizza', 8),
@@ -77,7 +121,7 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Stromboli', 'Branded Pizza', 8),
   item('Garlic Knots', 'Branded Pizza', 24),
 
-  // Sides (9)
+  // Sides (13)
   item('French Fries', 'Sides', 30, 'servings'),
   item('Onion Rings', 'Sides', 20, 'servings'),
   item('Mozzarella Sticks', 'Sides', 24),
@@ -87,6 +131,10 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Tater Tots', 'Sides', 24, 'servings'),
   item('Nachos', 'Sides', 15, 'servings'),
   item('Chips', 'Sides', 30, 'bags'),
+  item('Tortilla Chips', 'Sides', 20, 'bags'),
+  item('Baked Beans', 'Sides', 12, 'cans'),
+  item('Mac & Cheese', 'Sides', 15, 'servings'),
+  item('Coleslaw', 'Sides', 10, 'lbs'),
 
   // Wraps/Specialty (8)
   item('Breakfast Wrap', 'Wraps/Specialty', 12),
@@ -98,7 +146,7 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Pot Stickers', 'Wraps/Specialty', 18),
   item('Quesadilla', 'Wraps/Specialty', 12),
 
-  // Dairy (8)
+  // Dairy (19)
   item('Whole Milk', 'Dairy', 10, 'gallons'),
   item('2% Milk', 'Dairy', 12, 'gallons'),
   item('Skim Milk', 'Dairy', 6, 'gallons'),
@@ -107,8 +155,19 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Cheddar Cheese', 'Dairy', 5, 'lbs'),
   item('Cream Cheese', 'Dairy', 4, 'lbs'),
   item('Cheese Slices', 'Dairy', 100, 'slices'),
+  item('Cheese American Yellow', 'Dairy', 8, 'lbs'),
+  item('Cheese Swiss Sliced', 'Dairy', 6, 'lbs'),
+  item('Eggs Hard Cooked', 'Dairy', 24, 'eggs'),
+  item('Eggs Liquid Whole', 'Dairy', 6, 'cartons'),
+  item('Eggs Shell On Medium', 'Dairy', 15, 'dozen'),
+  item('Potato Mashed Deluxe', 'Dairy', 8, 'lbs'),
+  item('Sour Cream', 'Dairy', 8, 'lbs'),
+  item('Yogurt Parfait Blueberry', 'Dairy', 12, 'cups'),
+  item('Yogurt Parfait Strawberry', 'Dairy', 12, 'cups'),
+  item('Butter Blend', 'Dairy', 12, 'lbs'),
+  item('Ice Cream Mix Vanilla', 'Dairy', 8, 'gallons'),
 
-  // Produce (8)
+  // Produce (22)
   item('Lettuce', 'Produce', 8, 'heads'),
   item('Tomato', 'Produce', 15, 'lbs'),
   item('Onion', 'Produce', 10, 'lbs'),
@@ -117,8 +176,22 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Jalapenos', 'Produce', 5, 'lbs'),
   item('Mushrooms', 'Produce', 4, 'lbs'),
   item('Avocado', 'Produce', 12),
+  item('Beans Green Whole', 'Produce', 10, 'lbs'),
+  item('Beans Black', 'Produce', 8, 'cans'),
+  item('Beans Kidney Dark Red', 'Produce', 8, 'cans'),
+  item('Broccoli Floret', 'Produce', 10, 'lbs'),
+  item('Brussel Sprouts', 'Produce', 6, 'lbs'),
+  item('Cantaloupe Fruit Cup', 'Produce', 12, 'cups'),
+  item('Carrot Sliced', 'Produce', 10, 'lbs'),
+  item('Corn Sweet Cob', 'Produce', 24, 'pieces'),
+  item('Corn Fire Roasted', 'Produce', 8, 'lbs'),
+  item('Okra Breaded', 'Produce', 8, 'lbs'),
+  item('Peas Field With Snap', 'Produce', 8, 'lbs'),
+  item('Squash Yellow Sliced', 'Produce', 8, 'lbs'),
+  item('Tomato Diced Canned', 'Produce', 12, 'cans'),
+  item('Guacamole', 'Produce', 8, 'lbs'),
 
-  // Condiments (8)
+  // Condiments (16)
   item('Ketchup', 'Condiments', 6, 'bottles'),
   item('Mustard', 'Condiments', 4, 'bottles'),
   item('Mayo', 'Condiments', 4, 'bottles'),
@@ -127,6 +200,14 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Hot Sauce', 'Condiments', 4, 'bottles'),
   item('Salsa', 'Condiments', 4, 'jars'),
   item('Cheese Sauce', 'Condiments', 4, 'bags'),
+  item('Honey Pure Grade A', 'Condiments', 6, 'bottles'),
+  item('Jam Strawberry', 'Condiments', 6, 'jars'),
+  item('Jelly Grape', 'Condiments', 6, 'jars'),
+  item('Sauce Sweet & Sour', 'Condiments', 4, 'bottles'),
+  item('Sauce Sweet Red Chili', 'Condiments', 4, 'gallons'),
+  item('Dressing 1000 Island', 'Condiments', 4, 'bottles'),
+  item('Dressing Caesar', 'Condiments', 4, 'bottles'),
+  item('Beans Refried', 'Condiments', 6, 'cans'),
 
   // Beverages (9)
   item('Fountain Soda', 'Beverages', 5, 'BIB'),
@@ -146,13 +227,20 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
   item('Frozen Yogurt', 'Frozen Desserts', 12),
   item('Slushies', 'Frozen Desserts', 3, 'mixes'),
 
-  // Bread/Buns (6)
+  // Bread/Buns (13)
   item('Hamburger Buns', 'Bread/Buns', 24),
   item('Hot Dog Buns', 'Bread/Buns', 24),
   item('White Bread', 'Bread/Buns', 10, 'loaves'),
   item('Wheat Bread', 'Bread/Buns', 8, 'loaves'),
   item('Tortillas', 'Bread/Buns', 50),
   item('Biscuits', 'Bread/Buns', 24),
+  item('Bread Texas Toast', 'Bread/Buns', 12, 'loaves'),
+  item('Bun Plain 5"', 'Bread/Buns', 30),
+  item('Tortilla Corn White 6"', 'Bread/Buns', 90),
+  item('Tortilla Flour 12"', 'Bread/Buns', 48),
+  item('Tortilla Flour 6"', 'Bread/Buns', 72),
+  item('Roll Dinner Hawaiian Sweet', 'Bread/Buns', 36),
+  item('Taco Shell Yellow 5"', 'Bread/Buns', 50),
 ];
 
 export const CATEGORIES = [
@@ -160,6 +248,7 @@ export const CATEGORIES = [
   'Roller/Hot Case',
   'Deli',
   'Bakery',
+  'Cakes & Desserts',
   'Branded Pizza',
   'Sides',
   'Wraps/Specialty',
