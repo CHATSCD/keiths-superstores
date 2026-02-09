@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Minus, Plus, Save, Check } from 'lucide-react';
+import { Minus, Plus, Save, Check, ScanLine, Edit3 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import Scanner from '@/components/Scanner';
+import OcrResults from '@/components/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +18,8 @@ import {
   generateId,
   getTodayStr,
 } from '@/lib/storage';
-import { InventoryItem, Employee, WasteEntry, WasteReason, WASTE_REASONS } from '@/types';
+import { InventoryItem, Employee, WasteEntry, WasteReason, WASTE_REASONS, OcrResult } from '@/types';
+import { QRCodeData } from '@/lib/ocr';
 
 interface WasteItemState {
   quantity: number;
@@ -32,6 +35,9 @@ export default function WastePage() {
   const [wasteItems, setWasteItems] = useState<Record<string, WasteItemState>>({});
   const [saved, setSaved] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [mode, setMode] = useState<'manual' | 'scan'>('manual');
+  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+  const [qrData, setQrData] = useState<QRCodeData | null>(null);
 
   useEffect(() => {
     setItems(getEnabledItems());
@@ -80,6 +86,34 @@ export default function WastePage() {
   const totalItems = Object.keys(wasteItems).length;
   const totalUnits = Object.values(wasteItems).reduce((s, w) => s + w.quantity, 0);
 
+  const handleScanComplete = useCallback((result: OcrResult, qr: QRCodeData | null) => {
+    setOcrResult(result);
+    setQrData(qr);
+
+    // Auto-populate from QR code if available
+    if (qr) {
+      setEmployeeName(qr.employeeName);
+      setShift(qr.shift);
+      setDate(qr.date);
+    } else if (result.employeeName) {
+      setEmployeeName(result.employeeName);
+    }
+    if (result.shift) {
+      setShift(result.shift);
+    }
+
+    // Populate waste items from OCR results
+    const newWasteItems: Record<string, WasteItemState> = {};
+    result.items.forEach((item) => {
+      if (item.matchedItemId && item.quantity > 0) {
+        newWasteItems[item.matchedItemId] = {
+          quantity: item.quantity,
+        };
+      }
+    });
+    setWasteItems(newWasteItems);
+  }, []);
+
   const handleSave = () => {
     if (!employeeName.trim() || totalItems === 0) return;
 
@@ -98,11 +132,13 @@ export default function WastePage() {
           reason: w.reason,
         })),
       createdAt: new Date().toISOString(),
-      source: 'manual',
+      source: mode === 'scan' ? 'ocr' : 'manual',
     };
 
     saveWasteEntry(entry);
     setWasteItems({});
+    setOcrResult(null);
+    setQrData(null);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -120,6 +156,74 @@ export default function WastePage() {
           </div>
         )}
 
+        {/* Mode Tabs */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode('manual')}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-2 ${
+              mode === 'manual'
+                ? 'bg-red-600 text-white border-red-600'
+                : 'bg-white text-gray-700 border-gray-200'
+            }`}
+          >
+            <Edit3 className="h-4 w-4" />
+            Manual Entry
+          </button>
+          <button
+            onClick={() => setMode('scan')}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors flex items-center justify-center gap-2 ${
+              mode === 'scan'
+                ? 'bg-red-600 text-white border-red-600'
+                : 'bg-white text-gray-700 border-gray-200'
+            }`}
+          >
+            <ScanLine className="h-4 w-4" />
+            Scan/Upload
+          </button>
+        </div>
+
+        {/* Scanner Mode */}
+        {mode === 'scan' && !ocrResult && (
+          <Scanner onScanComplete={handleScanComplete} />
+        )}
+
+        {/* OCR Results Review */}
+        {mode === 'scan' && ocrResult && (
+          <OcrResults
+            result={ocrResult}
+            type="waste"
+            onConfirm={(updatedResult) => {
+              // Update with edited results
+              setEmployeeName(updatedResult.employeeName);
+              if (updatedResult.shift) {
+                setShift(updatedResult.shift);
+              }
+
+              // Update waste items with edited results
+              const newWasteItems: Record<string, WasteItemState> = {};
+              updatedResult.items.forEach((item) => {
+                if (item.matchedItemId && item.quantity > 0) {
+                  newWasteItems[item.matchedItemId] = {
+                    quantity: item.quantity,
+                  };
+                }
+              });
+              setWasteItems(newWasteItems);
+
+              // Clear OCR result to show manual form for final review
+              setOcrResult(null);
+            }}
+            onDiscard={() => {
+              setOcrResult(null);
+              setQrData(null);
+              setWasteItems({});
+            }}
+          />
+        )}
+
+        {/* Manual Entry Mode or After Scan */}
+        {(mode === 'manual' || (mode === 'scan' && ocrResult)) && (
+          <>
         {/* Entry Header */}
         <Card>
           <CardContent className="p-3 space-y-3">
@@ -270,6 +374,8 @@ export default function WastePage() {
             Save Waste Report ({totalItems} items, {totalUnits} units)
           </Button>
         </div>
+          </>
+        )}
       </main>
       <BottomNav />
     </div>
