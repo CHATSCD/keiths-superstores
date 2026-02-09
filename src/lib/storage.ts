@@ -11,6 +11,7 @@ const KEYS = {
   weeklyCounts: 'keiths-weekly-counts',
   enabledItems: 'keiths-enabled-items',
   bubbleConfig: 'keiths-bubble-config',
+  locationName: 'keiths-location-name',
 } as const;
 
 function getItem<T>(key: string, fallback: T): T {
@@ -200,6 +201,15 @@ export function saveWeeklyCount(count: WeeklyCount): void {
   setItem(KEYS.weeklyCounts, counts);
 }
 
+// Location Name
+export function getLocationName(): string {
+  return getItem<string>(KEYS.locationName, '');
+}
+
+export function saveLocationName(name: string): void {
+  setItem(KEYS.locationName, name);
+}
+
 // Export / Import
 export interface BackupData {
   version: 1;
@@ -211,6 +221,7 @@ export interface BackupData {
   weeklyCounts: WeeklyCount[];
   enabledItems?: string[];
   bubbleConfig?: BubbleConfig;
+  locationName?: string;
 }
 
 export function exportAllData(): BackupData {
@@ -224,6 +235,7 @@ export function exportAllData(): BackupData {
     weeklyCounts: getWeeklyCounts(),
     enabledItems: getEnabledItemIds(),
     bubbleConfig: getBubbleConfig(),
+    locationName: getLocationName(),
   };
 }
 
@@ -239,6 +251,7 @@ export function importAllData(data: BackupData): { success: boolean; error?: str
     if (data.weeklyCounts) setItem(KEYS.weeklyCounts, data.weeklyCounts);
     if (data.enabledItems) setItem(KEYS.enabledItems, data.enabledItems);
     if (data.bubbleConfig) setItem(KEYS.bubbleConfig, data.bubbleConfig);
+    if (data.locationName !== undefined) saveLocationName(data.locationName);
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Import failed' };

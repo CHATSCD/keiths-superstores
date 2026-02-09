@@ -17,6 +17,8 @@ import {
   addCustomItem,
   deleteCustomItem,
   generateId,
+  getLocationName,
+  saveLocationName,
 } from '@/lib/storage';
 import { InventoryItem } from '@/types';
 
@@ -29,15 +31,22 @@ export default function StoreItemsPage() {
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState(CATEGORIES[0]);
   const [newUnit, setNewUnit] = useState('units');
+  const [locationName, setLocationName] = useState('');
 
   const reload = () => {
     setAllItems(getInventory());
     setLocalEnabledIds(getEnabledItemIds());
+    setLocationName(getLocationName());
   };
 
   useEffect(() => {
     reload();
   }, []);
+
+  const handleLocationNameChange = (name: string) => {
+    setLocationName(name);
+    saveLocationName(name);
+  };
 
   const filteredItems = allItems.filter((item) => {
     const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
@@ -116,6 +125,25 @@ export default function StoreItemsPage() {
             {enabledCount} / {totalCount} enabled
           </span>
         </div>
+
+        {/* Location Name */}
+        <Card className="border-2 border-purple-200 bg-purple-50">
+          <CardContent className="p-3 space-y-2">
+            <label className="text-xs font-semibold text-purple-900">
+              Location/Store Name
+            </label>
+            <Input
+              type="text"
+              placeholder="Enter your store name or number..."
+              value={locationName}
+              onChange={(e) => handleLocationNameChange(e.target.value)}
+              className="bg-white"
+            />
+            <p className="text-[10px] text-purple-700">
+              Set your location name. Only enabled items below will appear on your production and waste sheets.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Search & Filter */}
         <div className="flex gap-2">
