@@ -77,6 +77,40 @@ export default function StoreItemsPage() {
     setLocalEnabledForInventory(getEnabledForInventoryIds());
   };
 
+  const handleToggleCategorySheets = (category: string) => {
+    const categoryItems = allItems.filter((item) => item.category === category);
+    const categoryItemIds = categoryItems.map((item) => item.id);
+    const allEnabled = categoryItemIds.every((id) => enabledForSheets.includes(id));
+
+    let newEnabledIds: string[];
+    if (allEnabled) {
+      // Disable all items in this category
+      newEnabledIds = enabledForSheets.filter((id) => !categoryItemIds.includes(id));
+    } else {
+      // Enable all items in this category
+      newEnabledIds = [...new Set([...enabledForSheets, ...categoryItemIds])];
+    }
+    setEnabledForSheetsIds(newEnabledIds);
+    setLocalEnabledForSheets(newEnabledIds);
+  };
+
+  const handleToggleCategoryInventory = (category: string) => {
+    const categoryItems = allItems.filter((item) => item.category === category);
+    const categoryItemIds = categoryItems.map((item) => item.id);
+    const allEnabled = categoryItemIds.every((id) => enabledForInventory.includes(id));
+
+    let newEnabledIds: string[];
+    if (allEnabled) {
+      // Disable all items in this category
+      newEnabledIds = enabledForInventory.filter((id) => !categoryItemIds.includes(id));
+    } else {
+      // Enable all items in this category
+      newEnabledIds = [...new Set([...enabledForInventory, ...categoryItemIds])];
+    }
+    setEnabledForInventoryIds(newEnabledIds);
+    setLocalEnabledForInventory(newEnabledIds);
+  };
+
   const handleAddCustom = () => {
     if (!newName.trim()) return;
     const item: InventoryItem = {
@@ -220,10 +254,46 @@ export default function StoreItemsPage() {
           const catItems = filteredItems.filter((i) => i.category === cat);
           if (catItems.length === 0) return null;
 
+          const categoryItemIds = catItems.map((i) => i.id);
+          const allSheetsEnabled = categoryItemIds.every((id) => enabledForSheets.includes(id));
+          const allInventoryEnabled = categoryItemIds.every((id) => enabledForInventory.includes(id));
+
           return (
             <Card key={cat}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">{cat} ({catItems.length})</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">{cat} ({catItems.length})</CardTitle>
+                  <div className="flex items-center gap-2">
+                    {/* Category Sheets Toggle */}
+                    <button
+                      onClick={() => handleToggleCategorySheets(cat)}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        allSheetsEnabled ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
+                      title={`Toggle all ${cat} items for Sheets`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                          allSheetsEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                    {/* Category Inventory Toggle */}
+                    <button
+                      onClick={() => handleToggleCategoryInventory(cat)}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        allInventoryEnabled ? 'bg-blue-500' : 'bg-gray-300'
+                      }`}
+                      title={`Toggle all ${cat} items for Inventory`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                          allInventoryEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-0.5">
                 {/* Column Headers */}
