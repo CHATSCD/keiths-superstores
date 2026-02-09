@@ -9,7 +9,9 @@ const KEYS = {
   production: 'keiths-production-entries',
   waste: 'keiths-waste-entries',
   weeklyCounts: 'keiths-weekly-counts',
-  enabledItems: 'keiths-enabled-items',
+  enabledItems: 'keiths-enabled-items', // Legacy - for backward compat
+  enabledForSheets: 'keiths-enabled-for-sheets', // Items on production/waste sheets
+  enabledForInventory: 'keiths-enabled-for-inventory', // Items tracked in inventory/ordering
   bubbleConfig: 'keiths-bubble-config',
   locationName: 'keiths-location-name',
 } as const;
@@ -118,6 +120,68 @@ export function getEnabledItems(): InventoryItem[] {
   return all.filter((item) => enabledIds.includes(item.id));
 }
 
+// Dual Enable System - For Sheets (Production/Waste)
+export function getEnabledForSheetsIds(): string[] {
+  const stored = getItem<string[] | null>(KEYS.enabledForSheets, null);
+  if (stored === null) {
+    // Default: all items enabled for sheets
+    const allIds = getInventory().map((i) => i.id);
+    setItem(KEYS.enabledForSheets, allIds);
+    return allIds;
+  }
+  return stored;
+}
+
+export function setEnabledForSheetsIds(ids: string[]): void {
+  setItem(KEYS.enabledForSheets, ids);
+}
+
+export function toggleItemEnabledForSheets(itemId: string): void {
+  const enabled = getEnabledForSheetsIds();
+  if (enabled.includes(itemId)) {
+    setItem(KEYS.enabledForSheets, enabled.filter((id) => id !== itemId));
+  } else {
+    setItem(KEYS.enabledForSheets, [...enabled, itemId]);
+  }
+}
+
+export function getEnabledForSheets(): InventoryItem[] {
+  const all = getInventory();
+  const enabledIds = getEnabledForSheetsIds();
+  return all.filter((item) => enabledIds.includes(item.id));
+}
+
+// Dual Enable System - For Inventory (Ordering/Tracking)
+export function getEnabledForInventoryIds(): string[] {
+  const stored = getItem<string[] | null>(KEYS.enabledForInventory, null);
+  if (stored === null) {
+    // Default: all items enabled for inventory
+    const allIds = getInventory().map((i) => i.id);
+    setItem(KEYS.enabledForInventory, allIds);
+    return allIds;
+  }
+  return stored;
+}
+
+export function setEnabledForInventoryIds(ids: string[]): void {
+  setItem(KEYS.enabledForInventory, ids);
+}
+
+export function toggleItemEnabledForInventory(itemId: string): void {
+  const enabled = getEnabledForInventoryIds();
+  if (enabled.includes(itemId)) {
+    setItem(KEYS.enabledForInventory, enabled.filter((id) => id !== itemId));
+  } else {
+    setItem(KEYS.enabledForInventory, [...enabled, itemId]);
+  }
+}
+
+export function getEnabledForInventory(): InventoryItem[] {
+  const all = getInventory();
+  const enabledIds = getEnabledForInventoryIds();
+  return all.filter((item) => enabledIds.includes(item.id));
+}
+
 // Bubble Config
 export function getBubbleConfig(): BubbleConfig {
   return getItem<BubbleConfig>(KEYS.bubbleConfig, { increment: 1, maxQuantity: 30 });
@@ -220,6 +284,8 @@ export interface BackupData {
   waste: WasteEntry[];
   weeklyCounts: WeeklyCount[];
   enabledItems?: string[];
+  enabledForSheets?: string[];
+  enabledForInventory?: string[];
   bubbleConfig?: BubbleConfig;
   locationName?: string;
 }
@@ -234,6 +300,8 @@ export function exportAllData(): BackupData {
     waste: getWasteEntries(),
     weeklyCounts: getWeeklyCounts(),
     enabledItems: getEnabledItemIds(),
+    enabledForSheets: getEnabledForSheetsIds(),
+    enabledForInventory: getEnabledForInventoryIds(),
     bubbleConfig: getBubbleConfig(),
     locationName: getLocationName(),
   };
@@ -250,6 +318,8 @@ export function importAllData(data: BackupData): { success: boolean; error?: str
     if (data.waste) setItem(KEYS.waste, data.waste);
     if (data.weeklyCounts) setItem(KEYS.weeklyCounts, data.weeklyCounts);
     if (data.enabledItems) setItem(KEYS.enabledItems, data.enabledItems);
+    if (data.enabledForSheets) setItem(KEYS.enabledForSheets, data.enabledForSheets);
+    if (data.enabledForInventory) setItem(KEYS.enabledForInventory, data.enabledForInventory);
     if (data.bubbleConfig) setItem(KEYS.bubbleConfig, data.bubbleConfig);
     if (data.locationName !== undefined) saveLocationName(data.locationName);
     return { success: true };

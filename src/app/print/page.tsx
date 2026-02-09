@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import QRCodeCanvas from '@/components/QRCodeCanvas';
 import { CATEGORIES } from '@/data/inventory';
 import {
-  getEnabledItems,
+  getEnabledForSheets,
   getBubbleConfig,
   saveBubbleConfig,
   getTodayStr,
@@ -28,7 +28,7 @@ export default function PrintPage() {
   const [locationName, setLocationName] = useState('');
 
   useEffect(() => {
-    setItems(getEnabledItems());
+    setItems(getEnabledForSheets());
     setConfig(getBubbleConfig());
     setLocationName(getLocationName());
   }, []);

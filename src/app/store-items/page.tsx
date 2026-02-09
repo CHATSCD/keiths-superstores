@@ -11,9 +11,12 @@ import { Select } from '@/components/ui/select';
 import { CATEGORIES } from '@/data/inventory';
 import {
   getInventory,
-  getEnabledItemIds,
-  setEnabledItemIds,
-  toggleItemEnabled,
+  getEnabledForSheetsIds,
+  setEnabledForSheetsIds,
+  toggleItemEnabledForSheets,
+  getEnabledForInventoryIds,
+  setEnabledForInventoryIds,
+  toggleItemEnabledForInventory,
   addCustomItem,
   deleteCustomItem,
   generateId,
@@ -24,7 +27,8 @@ import { InventoryItem } from '@/types';
 
 export default function StoreItemsPage() {
   const [allItems, setAllItems] = useState<InventoryItem[]>([]);
-  const [enabledIds, setLocalEnabledIds] = useState<string[]>([]);
+  const [enabledForSheets, setLocalEnabledForSheets] = useState<string[]>([]);
+  const [enabledForInventory, setLocalEnabledForInventory] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [showAdd, setShowAdd] = useState(false);
@@ -35,7 +39,8 @@ export default function StoreItemsPage() {
 
   const reload = () => {
     setAllItems(getInventory());
-    setLocalEnabledIds(getEnabledItemIds());
+    setLocalEnabledForSheets(getEnabledForSheetsIds());
+    setLocalEnabledForInventory(getEnabledForInventoryIds());
     setLocationName(getLocationName());
   };
 
@@ -58,32 +63,18 @@ export default function StoreItemsPage() {
     allItems.some((item) => item.category === cat)
   );
 
-  const enabledCount = enabledIds.length;
+  const sheetsEnabledCount = enabledForSheets.length;
+  const inventoryEnabledCount = enabledForInventory.length;
   const totalCount = allItems.length;
 
-  const handleToggle = (itemId: string) => {
-    toggleItemEnabled(itemId);
-    setLocalEnabledIds(getEnabledItemIds());
+  const handleToggleSheets = (itemId: string) => {
+    toggleItemEnabledForSheets(itemId);
+    setLocalEnabledForSheets(getEnabledForSheetsIds());
   };
 
-  const handleEnableAll = (category?: string) => {
-    const targetItems = category
-      ? allItems.filter((i) => i.category === category)
-      : allItems;
-    const targetIds = targetItems.map((i) => i.id);
-    const newEnabled = [...new Set([...enabledIds, ...targetIds])];
-    setEnabledItemIds(newEnabled);
-    setLocalEnabledIds(newEnabled);
-  };
-
-  const handleDisableAll = (category?: string) => {
-    const targetItems = category
-      ? allItems.filter((i) => i.category === category)
-      : allItems;
-    const targetIds = new Set(targetItems.map((i) => i.id));
-    const newEnabled = enabledIds.filter((id) => !targetIds.has(id));
-    setEnabledItemIds(newEnabled);
-    setLocalEnabledIds(newEnabled);
+  const handleToggleInventory = (itemId: string) => {
+    toggleItemEnabledForInventory(itemId);
+    setLocalEnabledForInventory(getEnabledForInventoryIds());
   };
 
   const handleAddCustom = () => {
@@ -97,9 +88,11 @@ export default function StoreItemsPage() {
       custom: true,
     };
     addCustomItem(item);
-    // Auto-enable
-    const newIds = [...getEnabledItemIds(), item.id];
-    setEnabledItemIds(newIds);
+    // Auto-enable for both sheets and inventory
+    const newSheetsIds = [...getEnabledForSheetsIds(), item.id];
+    setEnabledForSheetsIds(newSheetsIds);
+    const newInventoryIds = [...getEnabledForInventoryIds(), item.id];
+    setEnabledForInventoryIds(newInventoryIds);
     reload();
     setNewName('');
     setShowAdd(false);
@@ -121,9 +114,10 @@ export default function StoreItemsPage() {
       <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Store Items</h2>
-          <span className="text-sm text-muted-foreground font-medium">
-            {enabledCount} / {totalCount} enabled
-          </span>
+          <div className="text-right">
+            <div className="text-[10px] text-muted-foreground">Sheets: {sheetsEnabledCount}</div>
+            <div className="text-[10px] text-muted-foreground">Inventory: {inventoryEnabledCount}</div>
+          </div>
         </div>
 
         {/* Location Name */}
@@ -140,7 +134,8 @@ export default function StoreItemsPage() {
               className="bg-white"
             />
             <p className="text-[10px] text-purple-700">
-              Set your location name. Only enabled items below will appear on your production and waste sheets.
+              <strong>Sheets:</strong> Items that appear on production/waste sheets (items you cook/prepare).<br/>
+              <strong>Inventory:</strong> All items you track/order (includes supplies, ingredients, etc).
             </p>
           </CardContent>
         </Card>
@@ -224,43 +219,32 @@ export default function StoreItemsPage() {
         {displayCategories.map((cat) => {
           const catItems = filteredItems.filter((i) => i.category === cat);
           if (catItems.length === 0) return null;
-          const catEnabled = catItems.filter((i) => enabledIds.includes(i.id)).length;
-          const allEnabled = catEnabled === catItems.length;
 
           return (
             <Card key={cat}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center justify-between">
-                  <span>{cat} ({catEnabled}/{catItems.length})</span>
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() => handleEnableAll(cat)}
-                      className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
-                        allEnabled
-                          ? 'bg-green-100 text-green-700 border-green-200'
-                          : 'text-gray-500 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      Enable All
-                    </button>
-                    <button
-                      onClick={() => handleDisableAll(cat)}
-                      className="text-[10px] px-2 py-0.5 rounded border text-gray-500 border-gray-200 hover:bg-gray-50"
-                    >
-                      Disable All
-                    </button>
-                  </div>
-                </CardTitle>
+                <CardTitle className="text-sm">{cat} ({catItems.length})</CardTitle>
               </CardHeader>
               <CardContent className="pt-0 space-y-0.5">
+                {/* Column Headers */}
+                <div className="flex items-center justify-between py-1 border-b mb-2">
+                  <span className="text-[10px] font-semibold text-gray-600 flex-1">Item Name</span>
+                  <div className="flex items-center gap-4 text-[10px] font-semibold text-gray-600">
+                    <span className="w-10 text-center">Sheets</span>
+                    <span className="w-10 text-center">Inventory</span>
+                  </div>
+                </div>
+
                 {catItems.map((item) => {
-                  const isEnabled = enabledIds.includes(item.id);
+                  const forSheets = enabledForSheets.includes(item.id);
+                  const forInventory = enabledForInventory.includes(item.id);
+
                   return (
                     <div
                       key={item.id}
                       className="flex items-center justify-between py-1.5"
                     >
-                      <span className={`text-sm flex-1 truncate pr-2 ${!isEnabled ? 'text-gray-400' : ''}`}>
+                      <span className="text-sm flex-1 truncate pr-2">
                         {item.name}
                         {item.custom && (
                           <span className="text-[10px] ml-1 text-purple-500">(custom)</span>
@@ -270,21 +254,36 @@ export default function StoreItemsPage() {
                         {item.custom && (
                           <button
                             onClick={() => handleDeleteCustom(item.id)}
-                            className="text-red-400 hover:text-red-600"
+                            className="text-red-400 hover:text-red-600 mr-1"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
-                        {/* Toggle Switch */}
+                        {/* Sheets Toggle */}
                         <button
-                          onClick={() => handleToggle(item.id)}
+                          onClick={() => handleToggleSheets(item.id)}
                           className={`relative w-10 h-5 rounded-full transition-colors ${
-                            isEnabled ? 'bg-green-500' : 'bg-gray-300'
+                            forSheets ? 'bg-green-500' : 'bg-gray-300'
                           }`}
+                          title="Enable for Production/Waste Sheets"
                         >
                           <span
                             className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                              isEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                              forSheets ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </button>
+                        {/* Inventory Toggle */}
+                        <button
+                          onClick={() => handleToggleInventory(item.id)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${
+                            forInventory ? 'bg-blue-500' : 'bg-gray-300'
+                          }`}
+                          title="Enable for Inventory/Ordering"
+                        >
+                          <span
+                            className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                              forInventory ? 'translate-x-5' : 'translate-x-0.5'
                             }`}
                           />
                         </button>

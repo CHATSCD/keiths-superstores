@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, ClipboardList, Trash2, Settings, Printer } from 'lucide-react';
+import { Home, ClipboardList, Trash2, Settings, Printer, TrendingUp, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function BottomNav() {
@@ -13,7 +13,8 @@ export default function BottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/production', icon: ClipboardList, label: 'Production' },
     { href: '/waste', icon: Trash2, label: 'Waste' },
-    { href: '/store-items', icon: Settings, label: 'Items' },
+    { href: '/count', icon: Package, label: 'Count' },
+    { href: '/manager', icon: TrendingUp, label: 'Manager' },
     { href: '/print', icon: Printer, label: 'Print' },
   ];
 
