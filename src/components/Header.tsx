@@ -10,8 +10,8 @@ export default function Header() {
         <Image
           src="/logo.svg"
           alt="Keith's Superstores — The Fastest And Friendliest"
-          width={500}
-          height={120}
+          width={400}
+          height={100}
           className="w-full h-auto"
           priority
         />

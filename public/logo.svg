@@ -1,55 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 120">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#4A90D9"/>
-      <stop offset="88%" style="stop-color:#1B5EA8"/>
+      <stop offset="0%" style="stop-color:#5B9BD5"/>
+      <stop offset="85%" style="stop-color:#2E75B6"/>
       <stop offset="100%" style="stop-color:#C65D07"/>
     </linearGradient>
   </defs>
-  <rect width="500" height="120" fill="url(#bg)"/>
-
-  <!-- Cheetah mascot area -->
-  <ellipse cx="68" cy="64" rx="52" ry="52" fill="rgba(255,255,255,0.08)"/>
-  <!-- Body -->
-  <ellipse cx="72" cy="72" rx="30" ry="22" fill="#F5C842" opacity="0.95"/>
-  <!-- Spots -->
-  <circle cx="65" cy="70" r="4" fill="#8B6914" opacity="0.7"/>
-  <circle cx="78" cy="68" r="3.5" fill="#8B6914" opacity="0.7"/>
-  <circle cx="70" cy="81" r="3" fill="#8B6914" opacity="0.7"/>
-  <circle cx="83" cy="78" r="3.5" fill="#8B6914" opacity="0.7"/>
-  <!-- Head -->
-  <circle cx="55" cy="54" r="18" fill="#F5C842" opacity="0.95"/>
-  <!-- Face spots -->
-  <circle cx="51" cy="56" r="3" fill="#8B6914" opacity="0.6"/>
-  <circle cx="60" cy="55" r="3" fill="#8B6914" opacity="0.6"/>
-  <!-- Ears -->
-  <polygon points="44,40 38,28 52,36" fill="#F5C842"/>
-  <polygon points="66,38 72,27 60,35" fill="#F5C842"/>
-  <polygon points="46,39 42,31 51,36" fill="#E8956D"/>
-  <polygon points="64,37 69,29 61,35" fill="#E8956D"/>
-  <!-- Eyes -->
-  <circle cx="50" cy="52" r="3.5" fill="#1a1a1a"/>
-  <circle cx="62" cy="52" r="3.5" fill="#1a1a1a"/>
-  <circle cx="51" cy="51" r="1.2" fill="white"/>
-  <circle cx="63" cy="51" r="1.2" fill="white"/>
-  <!-- Nose -->
-  <ellipse cx="56" cy="59" rx="3" ry="2" fill="#E8956D"/>
-  <!-- Mouth -->
-  <path d="M 52 62 Q 56 65 60 62" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
-  <!-- Tail -->
-  <path d="M 100 68 Q 108 50 115 60 Q 120 70 113 75" stroke="#F5C842" stroke-width="5" fill="none" stroke-linecap="round"/>
-  <!-- Front paw -->
-  <ellipse cx="52" cy="90" rx="8" ry="5" fill="#F5C842" opacity="0.9"/>
-  <!-- Back leg -->
-  <ellipse cx="88" cy="88" rx="9" ry="6" fill="#F5C842" opacity="0.9"/>
-
-  <!-- KEITH'S text -->
-  <text x="140" y="58" font-family="Arial Black,Impact,sans-serif" font-size="44" font-weight="900" fill="white" letter-spacing="2">KEITH'S</text>
-  <!-- SUPERSTORES text in red -->
-  <text x="143" y="88" font-family="Arial Black,Impact,sans-serif" font-size="26" font-weight="900" fill="#CC1111" letter-spacing="3">SUPERSTORES</text>
+  <rect width="400" height="100" fill="url(#bg)" rx="6"/>
+  <!-- grown Leopard silhouette circle -->
+  <circle cx="55" cy="50" r="32" fill="rgba(255,255,255,0.15)"/>
+  <text x="38" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="bold" fill="#F5D060">🦁</text>
+  <!-- Keith's text -->
+  <text x="100" y="42" font-family="Arial Black,Arial,sans-serif" font-size="30" font-weight="900" fill="#FFFFFF" stroke="#CC0000" stroke-width="1">KEITH'S</text>
+  <!-- Superstores text -->
+  <text x="100" y="68" font-family="Arial Black,Arial,sans-serif" font-size="18" font-weight="900" fill="#CC0000">SUPERSTORES</text>
   <!-- Tagline -->
-  <text x="145" y="109" font-family="Georgia,Times,serif" font-size="13" font-style="italic" fill="#FFFFFFCC">"The Fastest And Friendliest"</text>
-
-  <!-- Orange bottom bar -->
-  <rect x="0" y="115" width="500" height="5" fill="#C65D07"/>
+  <text x="100" y="88" font-family="Georgia,serif" font-size="11" font-style="italic" fill="#FFFFFF">"The Fastest And Friendliest"</text>
 </svg>
