@@ -54,6 +54,17 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+/* QR scan line animation */
+@keyframes scan-line {
+  0%   { top: 10%; }
+  50%  { top: 85%; }
+  100% { top: 10%; }
+}
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+  position: absolute;
+}
+
 /* Print styles */
 @media print {
   @page {

@@ -304,8 +304,8 @@ export default function PrintPage() {
               <table className="w-full text-[10px] border-collapse">
                 <thead>
                   <tr>
-                    <th className="text-center py-0.5 px-0.5 border-b w-[24px]">QR</th>
-                    <th className="text-left py-0.5 px-1 border-b w-[120px]">Item</th>
+                    <th className="text-center py-0.5 px-0.5 border-b w-[44px]">QR</th>
+                    <th className="text-left py-0.5 px-1 border-b w-[110px]">Item</th>
                     {bubbleValues.map((v) => (
                       <th key={v} className="text-center py-0.5 px-0 border-b w-[18px]">
                         {v}
@@ -322,7 +322,7 @@ export default function PrintPage() {
                       <td className="py-0.5 px-0.5 text-center align-middle">
                         <QRCodeCanvas
                           data={JSON.stringify({ id: item.id, name: item.name, type: 'item' })}
-                          size={22}
+                          size={40}
                         />
                       </td>
                       <td className="py-1 px-1 text-[10px] leading-tight">{item.name}</td>
@@ -346,6 +346,50 @@ export default function PrintPage() {
 
         <div className="mt-4 text-[9px] text-gray-500 text-center">
           Fill in bubbles to indicate quantity. {formType === 'waste' && 'Write reason code in REASON column.'}
+        </div>
+
+        {/* ====== QR REFERENCE PAGE ====== */}
+        <div className="page-break-before mt-2">
+          <div className="text-center mb-4 border-b pb-2">
+            <h1 className="text-base font-bold">Keith&apos;s Superstores — QR Reference Sheet</h1>
+            <p className="text-[10px] text-gray-500">
+              Scan these QR codes in the app when recording production/waste quantities.
+              Print once — laminate and keep at the station.
+            </p>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}
+          >
+            {items.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  border: '1px solid #ccc',
+                  borderRadius: '6px',
+                  padding: '8px 4px',
+                  pageBreakInside: 'avoid',
+                }}
+              >
+                <QRCodeCanvas
+                  data={JSON.stringify({ id: item.id, name: item.name, type: 'item' })}
+                  size={80}
+                />
+                <p style={{ fontSize: '9px', textAlign: 'center', marginTop: '4px', fontWeight: 600, lineHeight: 1.2 }}>
+                  {item.name}
+                </p>
+                <p style={{ fontSize: '8px', color: '#888', marginTop: '2px' }}>
+                  {item.category}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
