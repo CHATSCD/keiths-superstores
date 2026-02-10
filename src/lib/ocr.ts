@@ -3,7 +3,7 @@
 import { OcrResult, OcrLineItem, InventoryItem, ScanStage } from '@/types';
 import jsQR from 'jsqr';
 
-// QR Code data structure
+// Sheet-level QR code (printed at top of form)
 export interface QRCodeData {
   type: 'production' | 'waste';
   employeeName: string;
@@ -12,6 +12,40 @@ export interface QRCodeData {
   items: number;
   increment: number;
   maxQty: number;
+}
+
+// Per-item QR code (printed on each row of the form)
+export interface ItemQRCodeData {
+  type: 'item';
+  id: string;
+  name: string;
+}
+
+export type AnyQRCode = QRCodeData | ItemQRCodeData;
+
+// Decode any QR code from image — returns sheet QR, item QR, or null
+export async function decodeAnyQRCode(imageData: string): Promise<AnyQRCode | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(null); return; }
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(data.data, data.width, data.height);
+      if (code?.data) {
+        try {
+          const parsed = JSON.parse(code.data) as AnyQRCode;
+          resolve(parsed);
+        } catch { resolve(null); }
+      } else { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = imageData;
+  });
 }
 
 // Decode QR code from image

@@ -180,7 +180,16 @@ export default function ProductionPage() {
 
         {/* Scanner Mode */}
         {mode === 'scan' && !ocrResult && (
-          <Scanner onScanComplete={handleScanComplete} />
+          <Scanner
+            onScanComplete={handleScanComplete}
+            onItemsScanned={(scanned) => {
+              const newQty: Record<string, number> = {};
+              scanned.forEach((i) => { newQty[i.itemId] = i.quantity; });
+              setQuantities(newQty);
+              // Switch to manual mode to review + save
+              setMode('manual');
+            }}
+          />
         )}
 
         {/* OCR Results Review */}

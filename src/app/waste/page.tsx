@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { CATEGORIES } from '@/data/inventory';
 import {
-  getEnabledItems,
+  getEnabledForSheets,
   getEmployees,
   saveWasteEntry,
   generateId,
@@ -40,7 +40,7 @@ export default function WastePage() {
   const [qrData, setQrData] = useState<QRCodeData | null>(null);
 
   useEffect(() => {
-    setItems(getEnabledItems());
+    setItems(getEnabledForSheets());
     setEmployees(getEmployees().filter((e) => e.active));
   }, []);
 
@@ -184,7 +184,15 @@ export default function WastePage() {
 
         {/* Scanner Mode */}
         {mode === 'scan' && !ocrResult && (
-          <Scanner onScanComplete={handleScanComplete} />
+          <Scanner
+            onScanComplete={handleScanComplete}
+            onItemsScanned={(scanned) => {
+              const newWaste: Record<string, WasteItemState> = {};
+              scanned.forEach((i) => { newWaste[i.itemId] = { quantity: i.quantity }; });
+              setWasteItems(newWaste);
+              setMode('manual');
+            }}
+          />
         )}
 
         {/* OCR Results Review */}

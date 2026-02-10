@@ -293,18 +293,19 @@ export default function PrintPage() {
           </div>
         )}
 
-        {/* Bubble Sheet Tables */}
+        {/* Bubble Sheet Tables — each row has its own item QR code */}
         {categories.map((cat) => {
           const catItems = items.filter((i) => i.category === cat);
           if (catItems.length === 0) return null;
 
           return (
-            <div key={cat} className="mb-3">
+            <div key={cat} className="mb-3 avoid-break">
               <h3 className="text-xs font-bold bg-gray-100 px-1 py-0.5 border-b">{cat}</h3>
               <table className="w-full text-[10px] border-collapse">
                 <thead>
                   <tr>
-                    <th className="text-left py-0.5 px-1 border-b w-[140px]">Item</th>
+                    <th className="text-center py-0.5 px-0.5 border-b w-[24px]">QR</th>
+                    <th className="text-left py-0.5 px-1 border-b w-[120px]">Item</th>
                     {bubbleValues.map((v) => (
                       <th key={v} className="text-center py-0.5 px-0 border-b w-[18px]">
                         {v}
@@ -318,7 +319,13 @@ export default function PrintPage() {
                 <tbody>
                   {catItems.map((item) => (
                     <tr key={item.id} className="border-b border-gray-100">
-                      <td className="py-1 px-1 text-[10px]">{item.name}</td>
+                      <td className="py-0.5 px-0.5 text-center align-middle">
+                        <QRCodeCanvas
+                          data={JSON.stringify({ id: item.id, name: item.name, type: 'item' })}
+                          size={22}
+                        />
+                      </td>
+                      <td className="py-1 px-1 text-[10px] leading-tight">{item.name}</td>
                       {bubbleValues.map((v) => (
                         <td key={v} className="text-center py-1 px-0">
                           <span className="inline-block w-3.5 h-3.5 rounded-full border border-gray-400" />
