@@ -2,13 +2,17 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Keith's Superstores Waste Tracking",
+  title: "Keith's Superstores",
   description: 'Food production and waste tracking — The Fastest And Friendliest',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo.svg',
+    apple: '/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: "Keith's Tracker",
+    title: "Keith's",
   },
 };
 
