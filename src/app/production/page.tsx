@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { CATEGORIES } from '@/data/inventory';
 import {
-  getEnabledItems,
+  getEnabledForSheets,
   getEmployees,
   saveProductionEntry,
   generateId,
@@ -28,6 +28,8 @@ export default function ProductionPage() {
   const [employeeName, setEmployeeName] = useState('');
   const [shift, setShift] = useState<'AM' | 'PM' | 'Night'>('AM');
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [deliSales, setDeliSales] = useState('');
+  const [brandedDeliSales, setBrandedDeliSales] = useState('');
   const [saved, setSaved] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [mode, setMode] = useState<'manual' | 'scan'>('manual');
@@ -35,7 +37,7 @@ export default function ProductionPage() {
   const [qrData, setQrData] = useState<QRCodeData | null>(null);
 
   useEffect(() => {
-    setItems(getEnabledItems());
+    setItems(getEnabledForSheets());
     setEmployees(getEmployees().filter((e) => e.active));
   }, []);
 
@@ -104,6 +106,9 @@ export default function ProductionPage() {
   const handleSave = () => {
     if (!employeeName.trim() || totalItems === 0) return;
 
+    const deli = parseFloat(deliSales) || 0;
+    const branded = parseFloat(brandedDeliSales) || 0;
+
     const entry: ProductionEntry = {
       id: generateId(),
       date,
@@ -119,10 +124,15 @@ export default function ProductionPage() {
         })),
       createdAt: new Date().toISOString(),
       source: mode === 'scan' ? 'ocr' : 'manual',
+      deliSales: deli > 0 ? deli : undefined,
+      brandedDeliSales: branded > 0 ? branded : undefined,
+      totalSales: (deli + branded) > 0 ? deli + branded : undefined,
     };
 
     saveProductionEntry(entry);
     setQuantities({});
+    setDeliSales('');
+    setBrandedDeliSales('');
     setOcrResult(null);
     setQrData(null);
     setSaved(true);
@@ -260,6 +270,45 @@ export default function ProductionPage() {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Sales Data */}
+        <Card className="border-2 border-emerald-200 bg-emerald-50">
+          <CardContent className="p-3 space-y-2">
+            <p className="text-xs font-semibold text-emerald-900">Shift Sales (optional)</p>
+            <p className="text-[10px] text-emerald-700">Enter sales totals for this shift to track correlation with production</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-medium text-emerald-800">Deli Sales $</label>
+                <Input
+                  type="number"
+                  value={deliSales}
+                  onChange={(e) => setDeliSales(e.target.value)}
+                  placeholder="0.00"
+                  className="mt-1 bg-white"
+                  min={0}
+                  step={0.01}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-emerald-800">Branded Deli $</label>
+                <Input
+                  type="number"
+                  value={brandedDeliSales}
+                  onChange={(e) => setBrandedDeliSales(e.target.value)}
+                  placeholder="0.00"
+                  className="mt-1 bg-white"
+                  min={0}
+                  step={0.01}
+                />
+              </div>
+            </div>
+            {(parseFloat(deliSales) > 0 || parseFloat(brandedDeliSales) > 0) && (
+              <p className="text-xs font-medium text-emerald-800">
+                Total: ${((parseFloat(deliSales) || 0) + (parseFloat(brandedDeliSales) || 0)).toFixed(2)}
+              </p>
+            )}
           </CardContent>
         </Card>
 

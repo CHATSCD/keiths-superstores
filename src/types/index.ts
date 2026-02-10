@@ -24,6 +24,10 @@ export interface ProductionEntry {
   items: ProductionLineItem[];
   createdAt: string;
   source: 'ocr' | 'manual';
+  // Sales data logged with each shift
+  deliSales?: number;
+  brandedDeliSales?: number;
+  totalSales?: number;
 }
 
 export interface ProductionLineItem {
@@ -114,6 +118,13 @@ export interface EmployeePerformance {
   wastePercentage: number;
   status: 'good' | 'undercooking' | 'overcooking';
   issues: string[];
+  // Sales correlation
+  avgDeliSales: number;
+  avgBrandedDeliSales: number;
+  avgTotalSales: number;
+  shiftsWithSalesData: number;
+  salesCorrelation: 'positive' | 'negative' | 'neutral' | 'no-data';
+  salesInsight: string;
 }
 
 export interface OrderSuggestion {

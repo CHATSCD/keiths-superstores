@@ -21,6 +21,8 @@ import {
   Upload,
   Database,
   AlertTriangle,
+  DollarSign,
+  TrendingDown,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
@@ -321,6 +323,51 @@ function PerformanceCard({ performance: p }: { performance: EmployeePerformance 
           <span>Cooked: {p.totalCooked}</span>
           <span>Wasted: {p.totalWasted}</span>
         </div>
+
+        {/* Sales Correlation */}
+        {p.shiftsWithSalesData > 0 && (
+          <div className={`rounded-lg p-2 border ${
+            p.salesCorrelation === 'negative'
+              ? 'bg-red-50 border-red-200'
+              : p.salesCorrelation === 'positive'
+              ? 'bg-green-50 border-green-200'
+              : 'bg-blue-50 border-blue-200'
+          }`}>
+            <div className="flex items-center gap-1 mb-1">
+              {p.salesCorrelation === 'negative' ? (
+                <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+              ) : (
+                <DollarSign className="h-3.5 w-3.5 text-green-600" />
+              )}
+              <span className="text-xs font-semibold">
+                Sales Data ({p.shiftsWithSalesData} shifts)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-1">
+              <div className="text-center">
+                <p className="text-[10px] text-muted-foreground">Avg Deli Sales</p>
+                <p className="text-sm font-bold">${p.avgDeliSales}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] text-muted-foreground">Avg Branded Deli</p>
+                <p className="text-sm font-bold">${p.avgBrandedDeliSales}</p>
+              </div>
+            </div>
+            {p.salesInsight && (
+              <p className={`text-[10px] ${
+                p.salesCorrelation === 'negative' ? 'text-red-700' : 'text-blue-700'
+              }`}>
+                {p.salesInsight}
+              </p>
+            )}
+          </div>
+        )}
+
+        {p.shiftsWithSalesData === 0 && (
+          <p className="text-[10px] text-muted-foreground italic">
+            No sales data yet. Enter Deli & Branded Deli sales on production logs.
+          </p>
+        )}
 
         {/* Issues */}
         {p.issues.length > 0 && (

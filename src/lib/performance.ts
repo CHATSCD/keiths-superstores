@@ -91,6 +91,61 @@ export function calculateEmployeePerformance(
     }
   }
 
+  // === SALES CORRELATION ===
+  const shiftsWithSales = empProduction.filter(
+    (e) => (e.deliSales ?? 0) > 0 || (e.brandedDeliSales ?? 0) > 0
+  );
+
+  let avgDeliSales = 0;
+  let avgBrandedDeliSales = 0;
+  let avgTotalSales = 0;
+  let salesCorrelation: EmployeePerformance['salesCorrelation'] = 'no-data';
+  let salesInsight = '';
+
+  if (shiftsWithSales.length > 0) {
+    avgDeliSales = Math.round(
+      shiftsWithSales.reduce((s, e) => s + (e.deliSales || 0), 0) / shiftsWithSales.length
+    );
+    avgBrandedDeliSales = Math.round(
+      shiftsWithSales.reduce((s, e) => s + (e.brandedDeliSales || 0), 0) / shiftsWithSales.length
+    );
+    avgTotalSales = avgDeliSales + avgBrandedDeliSales;
+
+    // Compare undercooking shifts vs sales
+    const undercookingShifts = empProduction.filter((e) => {
+      const totalQty = e.items.reduce((s, i) => s + i.quantity, 0);
+      return totalQty < totalParLevel * 0.8;
+    });
+
+    if (undercookingShifts.length > 0 && shiftsWithSales.length >= 2) {
+      const undercookSalesWithData = undercookingShifts.filter(
+        (e) => (e.deliSales ?? 0) > 0 || (e.brandedDeliSales ?? 0) > 0
+      );
+      if (undercookSalesWithData.length > 0) {
+        const avgSalesOnUndercookShifts = Math.round(
+          undercookSalesWithData.reduce((s, e) => s + (e.totalSales || (e.deliSales || 0) + (e.brandedDeliSales || 0)), 0) /
+          undercookSalesWithData.length
+        );
+        const salesImpact = Math.round(((avgSalesOnUndercookShifts - avgTotalSales) / (avgTotalSales || 1)) * 100);
+
+        if (salesImpact <= -10) {
+          salesCorrelation = 'negative';
+          salesInsight = `Sales avg $${avgSalesOnUndercookShifts} on undercooking shifts vs $${avgTotalSales} overall (${Math.abs(salesImpact)}% lower)`;
+          issues.push(`Undercooking may be hurting sales — avg $${Math.abs(avgTotalSales - avgSalesOnUndercookShifts)} less per shift`);
+        } else if (salesImpact >= 10) {
+          salesCorrelation = 'positive';
+          salesInsight = `Sales on high-production shifts avg $${avgTotalSales}`;
+        } else {
+          salesCorrelation = 'neutral';
+          salesInsight = `No clear sales impact from production levels`;
+        }
+      }
+    } else {
+      salesCorrelation = 'neutral';
+      salesInsight = `Avg shift sales: Deli $${avgDeliSales} | Branded $${avgBrandedDeliSales}`;
+    }
+  }
+
   return {
     employeeId: employee.id,
     employeeName: employee.name,
@@ -102,6 +157,12 @@ export function calculateEmployeePerformance(
     wastePercentage,
     status,
     issues,
+    avgDeliSales,
+    avgBrandedDeliSales,
+    avgTotalSales,
+    shiftsWithSalesData: shiftsWithSales.length,
+    salesCorrelation,
+    salesInsight,
   };
 }
 

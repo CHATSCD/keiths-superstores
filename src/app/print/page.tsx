@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Printer, Settings } from 'lucide-react';
+import { Printer, Settings, FileDown } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +41,22 @@ export default function PrintPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = document.querySelector('.print-only') as HTMLElement;
+    if (!element) return;
+    /* eslint-disable */
+    const html2pdf = (await import('html2pdf.js')).default as any;
+    /* eslint-enable */
+    const opt = {
+      margin: 0.25,
+      filename: `${formType}-${getTodayStr()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    };
+    await html2pdf().set(opt).from(element).save();
   };
 
   const categories = CATEGORIES.filter((cat) =>
@@ -204,14 +220,24 @@ export default function PrintPage() {
           </Card>
         )}
 
-        {/* Print Button */}
-        <Button
-          onClick={handlePrint}
-          className="w-full bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
-        >
-          <Printer className="h-5 w-5 mr-2" />
-          Print {formType === 'production' ? 'Production' : 'Waste'} Form
-        </Button>
+        {/* Print / Download Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={handlePrint}
+            className="flex-1 bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
+          >
+            <Printer className="h-5 w-5 mr-2" />
+            Print Form
+          </Button>
+          <Button
+            onClick={handleDownloadPDF}
+            variant="outline"
+            className="flex-1 h-12 text-base border-keiths-red text-keiths-red hover:bg-red-50"
+          >
+            <FileDown className="h-5 w-5 mr-2" />
+            Download PDF
+          </Button>
+        </div>
       </main>
 
       {/* ====== PRINTABLE BUBBLE SHEET ====== */}
