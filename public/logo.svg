@@ -1,19 +1,72 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 130">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#5B9BD5"/>
-      <stop offset="85%" style="stop-color:#2E75B6"/>
-      <stop offset="100%" style="stop-color:#C65D07"/>
+      <stop offset="0%" style="stop-color:#4A7FC1"/>
+      <stop offset="100%" style="stop-color:#1A4F8A"/>
     </linearGradient>
   </defs>
-  <rect width="400" height="100" fill="url(#bg)" rx="6"/>
-  <!-- grown Leopard silhouette circle -->
-  <circle cx="55" cy="50" r="32" fill="rgba(255,255,255,0.15)"/>
-  <text x="38" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="bold" fill="#F5D060">🦁</text>
-  <!-- Keith's text -->
-  <text x="100" y="42" font-family="Arial Black,Arial,sans-serif" font-size="30" font-weight="900" fill="#FFFFFF" stroke="#CC0000" stroke-width="1">KEITH'S</text>
-  <!-- Superstores text -->
-  <text x="100" y="68" font-family="Arial Black,Arial,sans-serif" font-size="18" font-weight="900" fill="#CC0000">SUPERSTORES</text>
+
+  <!-- Yellow border frame -->
+  <rect width="500" height="130" fill="#F5C800" rx="4"/>
+  <rect x="5" y="5" width="490" height="120" fill="url(#bg)" rx="2"/>
+
+  <!-- Cheetah body -->
+  <ellipse cx="90" cy="75" rx="42" ry="22" fill="#E8A830" transform="rotate(-8,90,75)"/>
+  <!-- Cheetah spots on body -->
+  <circle cx="75" cy="70" r="4" fill="#7B4A10" opacity="0.85"/>
+  <circle cx="90" cy="65" r="3.5" fill="#7B4A10" opacity="0.85"/>
+  <circle cx="105" cy="70" r="4" fill="#7B4A10" opacity="0.85"/>
+  <circle cx="80" cy="82" r="3.5" fill="#7B4A10" opacity="0.85"/>
+  <circle cx="98" cy="80" r="3" fill="#7B4A10" opacity="0.85"/>
+
+  <!-- Cheetah head -->
+  <circle cx="58" cy="55" r="20" fill="#E8A830"/>
+  <!-- Head spots -->
+  <circle cx="52" cy="50" r="3" fill="#7B4A10" opacity="0.75"/>
+  <circle cx="64" cy="49" r="2.5" fill="#7B4A10" opacity="0.75"/>
+  <circle cx="54" cy="62" r="2.5" fill="#7B4A10" opacity="0.75"/>
+  <!-- Ears -->
+  <polygon points="45,40 40,26 54,36" fill="#E8A830"/>
+  <polygon points="71,38 77,25 63,35" fill="#E8A830"/>
+  <polygon points="47,39 44,29 53,36" fill="#CC7A20"/>
+  <polygon points="69,37 74,28 64,35" fill="#CC7A20"/>
+  <!-- Eyes -->
+  <circle cx="52" cy="52" r="4" fill="#1a1a1a"/>
+  <circle cx="65" cy="52" r="4" fill="#1a1a1a"/>
+  <circle cx="53" cy="51" r="1.5" fill="white"/>
+  <circle cx="66" cy="51" r="1.5" fill="white"/>
+  <!-- Nose -->
+  <ellipse cx="58" cy="60" rx="3.5" ry="2.5" fill="#CC6622"/>
+  <!-- Mouth -->
+  <path d="M 54 63 Q 58 67 62 63" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
+  <!-- Cheetah cheek lines (tear marks) -->
+  <path d="M 48 57 Q 44 62 43 68" stroke="#7B4A10" stroke-width="1.5" fill="none" opacity="0.7"/>
+  <path d="M 51 60 Q 48 65 47 70" stroke="#7B4A10" stroke-width="1.5" fill="none" opacity="0.7"/>
+
+  <!-- Leaping front legs -->
+  <line x1="70" y1="80" x2="60" y2="100" stroke="#E8A830" stroke-width="7" stroke-linecap="round"/>
+  <line x1="82" y1="78" x2="78" y2="100" stroke="#E8A830" stroke-width="7" stroke-linecap="round"/>
+  <!-- Front paws -->
+  <ellipse cx="60" cy="101" rx="7" ry="4" fill="#E8A830"/>
+  <ellipse cx="78" cy="101" rx="7" ry="4" fill="#E8A830"/>
+
+  <!-- Back legs -->
+  <line x1="102" y1="82" x2="118" y2="100" stroke="#E8A830" stroke-width="7" stroke-linecap="round"/>
+  <line x1="112" y1="80" x2="126" y2="98" stroke="#E8A830" stroke-width="7" stroke-linecap="round"/>
+  <!-- Back paws -->
+  <ellipse cx="118" cy="101" rx="7" ry="4" fill="#E8A830"/>
+  <ellipse cx="126" cy="99" rx="7" ry="4" fill="#E8A830"/>
+
+  <!-- Tail -->
+  <path d="M 130 72 Q 148 55 158 65 Q 165 75 155 80" stroke="#E8A830" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+  <!-- KEITH'S — white with dark red stroke -->
+  <text x="162" y="68" font-family="Arial Black,Impact,sans-serif" font-size="52" font-weight="900"
+        fill="white" stroke="#990000" stroke-width="3" paint-order="stroke" letter-spacing="1">KEITH'S</text>
+  <!-- SUPERSTORES — bold red -->
+  <text x="165" y="95" font-family="Arial Black,Impact,sans-serif" font-size="28" font-weight="900"
+        fill="#CC1111" stroke="#7A0000" stroke-width="1.5" paint-order="stroke" letter-spacing="2">SUPERSTORES</text>
   <!-- Tagline -->
-  <text x="100" y="88" font-family="Georgia,serif" font-size="11" font-style="italic" fill="#FFFFFF">"The Fastest And Friendliest"</text>
+  <text x="167" y="116" font-family="Georgia,Times,serif" font-size="13" font-style="italic"
+        fill="#FFE87A" letter-spacing="0.5">"The Fastest And Friendliest"</text>
 </svg>
