@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Printer, Settings, FileDown } from 'lucide-react';
+import { Printer, Settings, FileDown, QrCode } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,7 @@ export default function PrintPage() {
   const [employeeName, setEmployeeName] = useState('');
   const [shift, setShift] = useState<'AM' | 'PM' | 'Night'>('AM');
   const [locationName, setLocationName] = useState('');
+  const [printMode, setPrintMode] = useState<'sheet' | 'qr'>('sheet');
 
   useEffect(() => {
     setItems(getEnabledForSheets());
@@ -40,11 +41,17 @@ export default function PrintPage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    setPrintMode('sheet');
+    setTimeout(() => window.print(), 50);
+  };
+
+  const handlePrintQRRef = () => {
+    setPrintMode('qr');
+    setTimeout(() => { window.print(); setPrintMode('sheet'); }, 50);
   };
 
   const handleDownloadPDF = async () => {
-    const element = document.querySelector('.print-only') as HTMLElement;
+    const element = document.getElementById('bubble-sheet-section') as HTMLElement;
     if (!element) return;
     /* eslint-disable */
     const html2pdf = (await import('html2pdf.js')).default as any;
@@ -52,6 +59,22 @@ export default function PrintPage() {
     const opt = {
       margin: 0.25,
       filename: `${formType}-${getTodayStr()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    };
+    await html2pdf().set(opt).from(element).save();
+  };
+
+  const handleDownloadQRPDF = async () => {
+    const element = document.getElementById('qr-ref-section') as HTMLElement;
+    if (!element) return;
+    /* eslint-disable */
+    const html2pdf = (await import('html2pdf.js')).default as any;
+    /* eslint-enable */
+    const opt = {
+      margin: 0.25,
+      filename: `qr-reference-${getTodayStr()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
@@ -221,27 +244,50 @@ export default function PrintPage() {
         )}
 
         {/* Print / Download Buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={handlePrint}
-            className="flex-1 bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
-          >
-            <Printer className="h-5 w-5 mr-2" />
-            Print Form
-          </Button>
-          <Button
-            onClick={handleDownloadPDF}
-            variant="outline"
-            className="flex-1 h-12 text-base border-keiths-red text-keiths-red hover:bg-red-50"
-          >
-            <FileDown className="h-5 w-5 mr-2" />
-            Download PDF
-          </Button>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Production / Waste Sheet</p>
+          <div className="flex gap-2">
+            <Button
+              onClick={handlePrint}
+              className="flex-1 bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
+            >
+              <Printer className="h-5 w-5 mr-2" />
+              Print Form
+            </Button>
+            <Button
+              onClick={handleDownloadPDF}
+              variant="outline"
+              className="flex-1 h-12 text-base border-keiths-red text-keiths-red hover:bg-red-50"
+            >
+              <FileDown className="h-5 w-5 mr-2" />
+              Download PDF
+            </Button>
+          </div>
+
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-1">QR Reference Sheet</p>
+          <p className="text-xs text-gray-500">Print once — laminate and keep at the station. Scan these QR codes to record quantities.</p>
+          <div className="flex gap-2">
+            <Button
+              onClick={handlePrintQRRef}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-base"
+            >
+              <QrCode className="h-5 w-5 mr-2" />
+              Print QR Ref
+            </Button>
+            <Button
+              onClick={handleDownloadQRPDF}
+              variant="outline"
+              className="flex-1 h-12 text-base border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              <FileDown className="h-5 w-5 mr-2" />
+              Download QR PDF
+            </Button>
+          </div>
         </div>
       </main>
 
       {/* ====== PRINTABLE BUBBLE SHEET ====== */}
-      <div className="print-only">
+      <div className={printMode === 'qr' ? 'no-print' : 'print-only'} id="bubble-sheet-section">
         <div className="text-center mb-3 border-b pb-2">
           <div className="flex justify-between items-start">
             <div className="flex-1" />
@@ -348,48 +394,52 @@ export default function PrintPage() {
           Fill in bubbles to indicate quantity. {formType === 'waste' && 'Write reason code in REASON column.'}
         </div>
 
-        {/* ====== QR REFERENCE PAGE ====== */}
-        <div className="page-break-before mt-2">
-          <div className="text-center mb-4 border-b pb-2">
-            <h1 className="text-base font-bold">Keith&apos;s Superstores — QR Reference Sheet</h1>
-            <p className="text-[10px] text-gray-500">
-              Scan these QR codes in the app when recording production/waste quantities.
-              Print once — laminate and keep at the station.
-            </p>
-          </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}
-          >
-            {items.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  border: '1px solid #ccc',
-                  borderRadius: '6px',
-                  padding: '8px 4px',
-                  pageBreakInside: 'avoid',
-                }}
-              >
-                <QRCodeCanvas
-                  data={JSON.stringify({ id: item.id, name: item.name, type: 'item' })}
-                  size={80}
-                />
-                <p style={{ fontSize: '9px', textAlign: 'center', marginTop: '4px', fontWeight: 600, lineHeight: 1.2 }}>
-                  {item.name}
-                </p>
-                <p style={{ fontSize: '8px', color: '#888', marginTop: '2px' }}>
-                  {item.category}
-                </p>
-              </div>
-            ))}
-          </div>
+      </div>
+
+      {/* ====== QR REFERENCE SECTION (separate top-level div) ====== */}
+      <div
+        id="qr-ref-section"
+        className={printMode === 'qr' ? 'print-only' : 'no-print'}
+      >
+        <div className="text-center mb-4 border-b pb-2">
+          <h1 className="text-base font-bold">Keith&apos;s Superstores — QR Reference Sheet</h1>
+          <p className="text-[10px] text-gray-500">
+            Scan these QR codes in the app when recording production/waste quantities.
+            Print once — laminate and keep at the station.
+          </p>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+          }}
+        >
+          {items.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                border: '1px solid #ccc',
+                borderRadius: '6px',
+                padding: '8px 4px',
+                pageBreakInside: 'avoid',
+              }}
+            >
+              <QRCodeCanvas
+                data={JSON.stringify({ id: item.id, name: item.name, type: 'item' })}
+                size={80}
+              />
+              <p style={{ fontSize: '9px', textAlign: 'center', marginTop: '4px', fontWeight: 600, lineHeight: 1.2 }}>
+                {item.name}
+              </p>
+              <p style={{ fontSize: '8px', color: '#888', marginTop: '2px' }}>
+                {item.category}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
