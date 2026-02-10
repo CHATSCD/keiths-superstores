@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { StoreProvider } from '@/context/StoreContext';
 
 export const metadata: Metadata = {
   title: "Keith's Superstores",
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="font-sans antialiased">
+        <StoreProvider>
         {children}
+        </StoreProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

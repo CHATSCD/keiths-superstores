@@ -3,19 +3,27 @@
 import { Employee, InventoryItem, ProductionEntry, WasteEntry, WeeklyCount, BubbleConfig } from '@/types';
 import { DEFAULT_INVENTORY } from '@/data/inventory';
 
-const KEYS = {
-  employees: 'keiths-employees',
-  inventory: 'keiths-inventory-items',
-  production: 'keiths-production-entries',
-  waste: 'keiths-waste-entries',
-  weeklyCounts: 'keiths-weekly-counts',
-  enabledItems: 'keiths-enabled-items', // Legacy - for backward compat
-  enabledForSheets: 'keiths-enabled-for-sheets', // Items on production/waste sheets
-  enabledForInventory: 'keiths-enabled-for-inventory', // Items tracked in inventory/ordering
-  bubbleConfig: 'keiths-bubble-config',
-  locationName: 'keiths-location-name',
-} as const;
+// ─── Store selection (global, not namespaced) ────────────────────────────────
+const CURRENT_STORE_KEY = 'keiths-current-store';
 
+export function getCurrentStoreId(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(CURRENT_STORE_KEY) || '';
+}
+
+export function setCurrentStoreId(storeId: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(CURRENT_STORE_KEY, storeId);
+}
+
+// Prefix a key with the active store so each store has isolated data
+function k(suffix: string): string {
+  const storeId = getCurrentStoreId();
+  const prefix = storeId ? `keiths-${storeId}` : 'keiths';
+  return `${prefix}-${suffix}`;
+}
+
+// ─── Low-level helpers ───────────────────────────────────────────────────────
 function getItem<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
@@ -31,13 +39,13 @@ function setItem<T>(key: string, value: T): void {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// Employees
+// ─── Employees ───────────────────────────────────────────────────────────────
 export function getEmployees(): Employee[] {
-  return getItem<Employee[]>(KEYS.employees, []);
+  return getItem<Employee[]>(k('employees'), []);
 }
 
 export function saveEmployees(employees: Employee[]): void {
-  setItem(KEYS.employees, employees);
+  setItem(k('employees'), employees);
 }
 
 export function addEmployee(employee: Employee): void {
@@ -51,18 +59,18 @@ export function removeEmployee(id: string): void {
   saveEmployees(employees);
 }
 
-// Inventory
+// ─── Inventory ───────────────────────────────────────────────────────────────
 export function getInventory(): InventoryItem[] {
-  const items = getItem<InventoryItem[]>(KEYS.inventory, []);
+  const items = getItem<InventoryItem[]>(k('inventory-items'), []);
   if (items.length === 0) {
-    setItem(KEYS.inventory, DEFAULT_INVENTORY);
+    setItem(k('inventory-items'), DEFAULT_INVENTORY);
     return DEFAULT_INVENTORY;
   }
   return items;
 }
 
 export function saveInventory(items: InventoryItem[]): void {
-  setItem(KEYS.inventory, items);
+  setItem(k('inventory-items'), items);
 }
 
 export function updateInventoryItem(item: InventoryItem): void {
@@ -83,34 +91,31 @@ export function addCustomItem(item: InventoryItem): void {
 export function deleteCustomItem(id: string): void {
   const items = getInventory().filter((i) => i.id !== id);
   saveInventory(items);
-  // Also remove from enabled items
   const enabled = getEnabledItemIds();
-  const updated = enabled.filter((eid) => eid !== id);
-  setItem(KEYS.enabledItems, updated);
+  setItem(k('enabled-items'), enabled.filter((eid) => eid !== id));
 }
 
-// Enabled Items (store item toggles)
+// ─── Enabled Items (legacy) ──────────────────────────────────────────────────
 export function getEnabledItemIds(): string[] {
-  const stored = getItem<string[] | null>(KEYS.enabledItems, null);
+  const stored = getItem<string[] | null>(k('enabled-items'), null);
   if (stored === null) {
-    // Default: all items enabled
     const allIds = getInventory().map((i) => i.id);
-    setItem(KEYS.enabledItems, allIds);
+    setItem(k('enabled-items'), allIds);
     return allIds;
   }
   return stored;
 }
 
 export function setEnabledItemIds(ids: string[]): void {
-  setItem(KEYS.enabledItems, ids);
+  setItem(k('enabled-items'), ids);
 }
 
 export function toggleItemEnabled(itemId: string): void {
   const enabled = getEnabledItemIds();
   if (enabled.includes(itemId)) {
-    setItem(KEYS.enabledItems, enabled.filter((id) => id !== itemId));
+    setItem(k('enabled-items'), enabled.filter((id) => id !== itemId));
   } else {
-    setItem(KEYS.enabledItems, [...enabled, itemId]);
+    setItem(k('enabled-items'), [...enabled, itemId]);
   }
 }
 
@@ -120,28 +125,27 @@ export function getEnabledItems(): InventoryItem[] {
   return all.filter((item) => enabledIds.includes(item.id));
 }
 
-// Dual Enable System - For Sheets (Production/Waste)
+// ─── Dual Enable: Sheets ─────────────────────────────────────────────────────
 export function getEnabledForSheetsIds(): string[] {
-  const stored = getItem<string[] | null>(KEYS.enabledForSheets, null);
+  const stored = getItem<string[] | null>(k('enabled-for-sheets'), null);
   if (stored === null) {
-    // Default: all items enabled for sheets
     const allIds = getInventory().map((i) => i.id);
-    setItem(KEYS.enabledForSheets, allIds);
+    setItem(k('enabled-for-sheets'), allIds);
     return allIds;
   }
   return stored;
 }
 
 export function setEnabledForSheetsIds(ids: string[]): void {
-  setItem(KEYS.enabledForSheets, ids);
+  setItem(k('enabled-for-sheets'), ids);
 }
 
 export function toggleItemEnabledForSheets(itemId: string): void {
   const enabled = getEnabledForSheetsIds();
   if (enabled.includes(itemId)) {
-    setItem(KEYS.enabledForSheets, enabled.filter((id) => id !== itemId));
+    setItem(k('enabled-for-sheets'), enabled.filter((id) => id !== itemId));
   } else {
-    setItem(KEYS.enabledForSheets, [...enabled, itemId]);
+    setItem(k('enabled-for-sheets'), [...enabled, itemId]);
   }
 }
 
@@ -151,28 +155,27 @@ export function getEnabledForSheets(): InventoryItem[] {
   return all.filter((item) => enabledIds.includes(item.id));
 }
 
-// Dual Enable System - For Inventory (Ordering/Tracking)
+// ─── Dual Enable: Inventory ──────────────────────────────────────────────────
 export function getEnabledForInventoryIds(): string[] {
-  const stored = getItem<string[] | null>(KEYS.enabledForInventory, null);
+  const stored = getItem<string[] | null>(k('enabled-for-inventory'), null);
   if (stored === null) {
-    // Default: all items enabled for inventory
     const allIds = getInventory().map((i) => i.id);
-    setItem(KEYS.enabledForInventory, allIds);
+    setItem(k('enabled-for-inventory'), allIds);
     return allIds;
   }
   return stored;
 }
 
 export function setEnabledForInventoryIds(ids: string[]): void {
-  setItem(KEYS.enabledForInventory, ids);
+  setItem(k('enabled-for-inventory'), ids);
 }
 
 export function toggleItemEnabledForInventory(itemId: string): void {
   const enabled = getEnabledForInventoryIds();
   if (enabled.includes(itemId)) {
-    setItem(KEYS.enabledForInventory, enabled.filter((id) => id !== itemId));
+    setItem(k('enabled-for-inventory'), enabled.filter((id) => id !== itemId));
   } else {
-    setItem(KEYS.enabledForInventory, [...enabled, itemId]);
+    setItem(k('enabled-for-inventory'), [...enabled, itemId]);
   }
 }
 
@@ -182,24 +185,24 @@ export function getEnabledForInventory(): InventoryItem[] {
   return all.filter((item) => enabledIds.includes(item.id));
 }
 
-// Bubble Config
+// ─── Bubble Config ───────────────────────────────────────────────────────────
 export function getBubbleConfig(): BubbleConfig {
-  return getItem<BubbleConfig>(KEYS.bubbleConfig, { increment: 1, maxQuantity: 30 });
+  return getItem<BubbleConfig>(k('bubble-config'), { increment: 1, maxQuantity: 30 });
 }
 
 export function saveBubbleConfig(config: BubbleConfig): void {
-  setItem(KEYS.bubbleConfig, config);
+  setItem(k('bubble-config'), config);
 }
 
-// Production Entries
+// ─── Production Entries ──────────────────────────────────────────────────────
 export function getProductionEntries(): ProductionEntry[] {
-  return getItem<ProductionEntry[]>(KEYS.production, []);
+  return getItem<ProductionEntry[]>(k('production-entries'), []);
 }
 
 export function saveProductionEntry(entry: ProductionEntry): void {
   const entries = getProductionEntries();
   entries.push(entry);
-  setItem(KEYS.production, entries);
+  setItem(k('production-entries'), entries);
 }
 
 export function getProductionEntriesByDate(date: string): ProductionEntry[] {
@@ -208,7 +211,7 @@ export function getProductionEntriesByDate(date: string): ProductionEntry[] {
 
 export function deleteProductionEntry(id: string): void {
   const entries = getProductionEntries().filter((e) => e.id !== id);
-  setItem(KEYS.production, entries);
+  setItem(k('production-entries'), entries);
 }
 
 export function updateProductionEntry(updated: ProductionEntry): void {
@@ -216,19 +219,19 @@ export function updateProductionEntry(updated: ProductionEntry): void {
   const idx = entries.findIndex((e) => e.id === updated.id);
   if (idx >= 0) {
     entries[idx] = updated;
-    setItem(KEYS.production, entries);
+    setItem(k('production-entries'), entries);
   }
 }
 
-// Waste Entries
+// ─── Waste Entries ───────────────────────────────────────────────────────────
 export function getWasteEntries(): WasteEntry[] {
-  return getItem<WasteEntry[]>(KEYS.waste, []);
+  return getItem<WasteEntry[]>(k('waste-entries'), []);
 }
 
 export function saveWasteEntry(entry: WasteEntry): void {
   const entries = getWasteEntries();
   entries.push(entry);
-  setItem(KEYS.waste, entries);
+  setItem(k('waste-entries'), entries);
 }
 
 export function getWasteEntriesByDate(date: string): WasteEntry[] {
@@ -237,7 +240,7 @@ export function getWasteEntriesByDate(date: string): WasteEntry[] {
 
 export function deleteWasteEntry(id: string): void {
   const entries = getWasteEntries().filter((e) => e.id !== id);
-  setItem(KEYS.waste, entries);
+  setItem(k('waste-entries'), entries);
 }
 
 export function updateWasteEntry(updated: WasteEntry): void {
@@ -245,13 +248,13 @@ export function updateWasteEntry(updated: WasteEntry): void {
   const idx = entries.findIndex((e) => e.id === updated.id);
   if (idx >= 0) {
     entries[idx] = updated;
-    setItem(KEYS.waste, entries);
+    setItem(k('waste-entries'), entries);
   }
 }
 
-// Weekly Counts
+// ─── Weekly Counts ───────────────────────────────────────────────────────────
 export function getWeeklyCounts(): WeeklyCount[] {
-  return getItem<WeeklyCount[]>(KEYS.weeklyCounts, []);
+  return getItem<WeeklyCount[]>(k('weekly-counts'), []);
 }
 
 export function saveWeeklyCount(count: WeeklyCount): void {
@@ -262,21 +265,22 @@ export function saveWeeklyCount(count: WeeklyCount): void {
   } else {
     counts.push(count);
   }
-  setItem(KEYS.weeklyCounts, counts);
+  setItem(k('weekly-counts'), counts);
 }
 
-// Location Name
+// ─── Location Name (legacy, now derived from store) ──────────────────────────
 export function getLocationName(): string {
-  return getItem<string>(KEYS.locationName, '');
+  return getItem<string>(k('location-name'), '');
 }
 
 export function saveLocationName(name: string): void {
-  setItem(KEYS.locationName, name);
+  setItem(k('location-name'), name);
 }
 
-// Export / Import
+// ─── Export / Import ─────────────────────────────────────────────────────────
 export interface BackupData {
   version: 1;
+  storeId?: string;
   exportedAt: string;
   employees: Employee[];
   inventory: InventoryItem[];
@@ -293,6 +297,7 @@ export interface BackupData {
 export function exportAllData(): BackupData {
   return {
     version: 1,
+    storeId: getCurrentStoreId(),
     exportedAt: new Date().toISOString(),
     employees: getEmployees(),
     inventory: getInventory(),
@@ -314,13 +319,13 @@ export function importAllData(data: BackupData): { success: boolean; error?: str
     }
     if (data.employees) saveEmployees(data.employees);
     if (data.inventory) saveInventory(data.inventory);
-    if (data.production) setItem(KEYS.production, data.production);
-    if (data.waste) setItem(KEYS.waste, data.waste);
-    if (data.weeklyCounts) setItem(KEYS.weeklyCounts, data.weeklyCounts);
-    if (data.enabledItems) setItem(KEYS.enabledItems, data.enabledItems);
-    if (data.enabledForSheets) setItem(KEYS.enabledForSheets, data.enabledForSheets);
-    if (data.enabledForInventory) setItem(KEYS.enabledForInventory, data.enabledForInventory);
-    if (data.bubbleConfig) setItem(KEYS.bubbleConfig, data.bubbleConfig);
+    if (data.production) setItem(k('production-entries'), data.production);
+    if (data.waste) setItem(k('waste-entries'), data.waste);
+    if (data.weeklyCounts) setItem(k('weekly-counts'), data.weeklyCounts);
+    if (data.enabledItems) setItem(k('enabled-items'), data.enabledItems);
+    if (data.enabledForSheets) setItem(k('enabled-for-sheets'), data.enabledForSheets);
+    if (data.enabledForInventory) setItem(k('enabled-for-inventory'), data.enabledForInventory);
+    if (data.bubbleConfig) setItem(k('bubble-config'), data.bubbleConfig);
     if (data.locationName !== undefined) saveLocationName(data.locationName);
     return { success: true };
   } catch (e) {
@@ -329,12 +334,18 @@ export function importAllData(data: BackupData): { success: boolean; error?: str
 }
 
 export function clearAllData(): void {
-  Object.values(KEYS).forEach((key) => {
-    if (typeof window !== 'undefined') localStorage.removeItem(key);
-  });
+  if (typeof window === 'undefined') return;
+  const storeId = getCurrentStoreId();
+  const prefix = storeId ? `keiths-${storeId}-` : 'keiths-';
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) keysToRemove.push(key);
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key));
 }
 
-// Utility
+// ─── Utilities ───────────────────────────────────────────────────────────────
 export function getTodayStr(): string {
   return new Date().toISOString().split('T')[0];
 }
