@@ -166,10 +166,10 @@ GROUP BY u.id, u.name, u.store_id;
 -- SEED DATA
 -- ============================================================
 INSERT INTO users (name, email, password_hash, role, store_id) VALUES
-  ('Admin User',   'admin@keiths.com',   '$2b$10$rQ9wZ3X1sJkT4nL5mN8pMeGHcFvBuAosDyYxKtWiZlRqPjgMhNe3C', 'admin',    'store-01'),
-  ('Manager Sue',  'manager@keiths.com', '$2b$10$rQ9wZ3X1sJkT4nL5mN8pMeGHcFvBuAosDyYxKtWiZlRqPjgMhNe3C', 'manager',  'store-01'),
-  ('John Smith',   'john@keiths.com',    '$2b$10$rQ9wZ3X1sJkT4nL5mN8pMeGHcFvBuAosDyYxKtWiZlRqPjgMhNe3C', 'employee', 'store-01'),
-  ('Jane Doe',     'jane@keiths.com',    '$2b$10$rQ9wZ3X1sJkT4nL5mN8pMeGHcFvBuAosDyYxKtWiZlRqPjgMhNe3C', 'employee', 'store-01')
+  ('Admin User',   'admin@keiths.com',   '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'admin',    'store-01'),
+  ('Manager Sue',  'manager@keiths.com', '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'manager',  'store-01'),
+  ('John Smith',   'john@keiths.com',    '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'employee', 'store-01'),
+  ('Jane Doe',     'jane@keiths.com',    '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'employee', 'store-01')
 ON CONFLICT (email) DO NOTHING;
 -- Default password for all seed users: "password123"
 
