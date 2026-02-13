@@ -9,6 +9,8 @@ import {
   Settings,
   ChevronRight,
   TrendingUp,
+  BarChart2,
+  AlertTriangle,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
@@ -19,15 +21,19 @@ import {
   getProductionEntries,
   getWasteEntries,
   getTodayStr,
+  getInventory,
+  getEmployees,
 } from '@/lib/storage';
 import { seedIfEmpty } from '@/lib/seed';
 import { ProductionEntry, WasteEntry } from '@/types';
+import { generateSmartAlerts } from '@/lib/analytics';
 
 export default function HomePage() {
   const router = useRouter();
   const [todayProd, setTodayProd] = useState(0);
   const [todayWaste, setTodayWaste] = useState(0);
   const [recentReports, setRecentReports] = useState<(ProductionEntry | WasteEntry)[]>([]);
+  const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
     seedIfEmpty();
@@ -45,6 +51,14 @@ export default function HomePage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
     setRecentReports(combined);
+
+    // Smart alerts
+    const inv = getInventory();
+    const emps = getEmployees();
+    const allWaste2 = getWasteEntries();
+    const allProd2 = getProductionEntries();
+    const alerts = generateSmartAlerts(allWaste2, allProd2, inv, emps);
+    setAlertCount(alerts.filter((a) => a.severity === 'critical' || a.severity === 'warning').length);
   }, []);
 
   const wasteRate = todayProd + todayWaste > 0
@@ -75,6 +89,12 @@ export default function HomePage() {
       icon: Settings,
       color: 'bg-purple-100 text-purple-700',
       href: '/store-items',
+    },
+    {
+      label: 'Executive View',
+      icon: BarChart2,
+      color: 'bg-blue-100 text-blue-700',
+      href: '/executive',
     },
   ];
 
@@ -112,6 +132,23 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Smart Alert Banner */}
+        {alertCount > 0 && (
+          <button
+            onClick={() => router.push('/executive?tab=alerts')}
+            className="w-full flex items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-left hover:bg-amber-100 transition-colors"
+          >
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800">
+                {alertCount} Active Alert{alertCount !== 1 ? 's' : ''}
+              </p>
+              <p className="text-xs text-amber-600">Tap to view smart alerts in Executive View</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-amber-500 shrink-0" />
+          </button>
+        )}
 
         {/* Quick Actions */}
         <div>

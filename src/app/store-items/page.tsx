@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Check } from 'lucide-react';
+import { Search, Plus, Trash2, Check, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,7 @@ import {
   generateId,
   getLocationName,
   saveLocationName,
+  saveInventory,
 } from '@/lib/storage';
 import { InventoryItem } from '@/types';
 
@@ -36,6 +37,8 @@ export default function StoreItemsPage() {
   const [newCategory, setNewCategory] = useState(CATEGORIES[0]);
   const [newUnit, setNewUnit] = useState('units');
   const [locationName, setLocationName] = useState('');
+  const [trainingOpen, setTrainingOpen] = useState<string | null>(null);
+  const [trainingDraft, setTrainingDraft] = useState<Partial<import('@/types').InventoryItem>>({});
 
   const reload = () => {
     setAllItems(getInventory());
@@ -130,6 +133,25 @@ export default function StoreItemsPage() {
     reload();
     setNewName('');
     setShowAdd(false);
+  };
+
+  const openTraining = (item: import('@/types').InventoryItem) => {
+    setTrainingOpen(item.id);
+    setTrainingDraft({
+      trainingNote: item.trainingNote || '',
+      targetQtyAM: item.targetQtyAM,
+      targetQtyPM: item.targetQtyPM,
+      targetQtyNight: item.targetQtyNight,
+      shelfLifeHours: item.shelfLifeHours,
+    });
+  };
+
+  const saveTraining = (itemId: string) => {
+    const inv = getInventory();
+    const updated = inv.map((i) => i.id === itemId ? { ...i, ...trainingDraft } : i);
+    saveInventory(updated);
+    setTrainingOpen(null);
+    reload();
   };
 
   const handleDeleteCustom = (id: string) => {
@@ -310,8 +332,8 @@ export default function StoreItemsPage() {
                   const forInventory = enabledForInventory.includes(item.id);
 
                   return (
+                    <React.Fragment key={item.id}>
                     <div
-                      key={item.id}
                       className="flex items-center justify-between py-1.5"
                     >
                       <span className="text-sm flex-1 truncate pr-2">
@@ -357,8 +379,78 @@ export default function StoreItemsPage() {
                             }`}
                           />
                         </button>
+                        {/* Training button */}
+                        <button
+                          onClick={() => trainingOpen === item.id ? setTrainingOpen(null) : openTraining(item)}
+                          className={`p-1 rounded ${trainingOpen === item.id ? 'text-purple-600' : 'text-gray-300 hover:text-purple-400'}`}
+                          title="Training mode"
+                        >
+                          <BookOpen className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </div>
+
+                    {/* Training Panel */}
+                    {trainingOpen === item.id && (
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-1 mb-2 space-y-2">
+                        <p className="text-xs font-bold text-purple-800 flex items-center gap-1">
+                          <BookOpen className="h-3 w-3" /> Training Mode — {item.name}
+                        </p>
+                        <div>
+                          <label className="text-[10px] font-semibold text-purple-700">Training Note / SOP</label>
+                          <textarea
+                            value={trainingDraft.trainingNote || ''}
+                            onChange={(e) => setTrainingDraft({ ...trainingDraft, trainingNote: e.target.value })}
+                            placeholder="Tips, shelf life reminders, common mistakes, SOP steps..."
+                            className="w-full border rounded p-1.5 text-xs mt-0.5 min-h-[60px]"
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(['AM', 'PM', 'Night'] as const).map((shift) => {
+                            const key = `targetQty${shift}` as 'targetQtyAM' | 'targetQtyPM' | 'targetQtyNight';
+                            return (
+                              <div key={shift}>
+                                <label className="text-[10px] font-semibold text-purple-700">{shift} Target</label>
+                                <input
+                                  type="number"
+                                  value={trainingDraft[key] || ''}
+                                  onChange={(e) => setTrainingDraft({ ...trainingDraft, [key]: parseInt(e.target.value) || undefined })}
+                                  className="w-full border rounded px-2 py-1 text-xs mt-0.5"
+                                  placeholder="qty"
+                                  min={0}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-purple-700">Shelf Life (hours)</label>
+                          <input
+                            type="number"
+                            value={trainingDraft.shelfLifeHours || ''}
+                            onChange={(e) => setTrainingDraft({ ...trainingDraft, shelfLifeHours: parseInt(e.target.value) || undefined })}
+                            className="w-full border rounded px-2 py-1 text-xs mt-0.5"
+                            placeholder="e.g. 4"
+                            min={1}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => saveTraining(item.id)}
+                            className="flex-1 bg-purple-600 text-white py-1.5 rounded text-xs font-bold flex items-center justify-center gap-1"
+                          >
+                            <Check className="h-3 w-3" /> Save
+                          </button>
+                          <button
+                            onClick={() => setTrainingOpen(null)}
+                            className="flex-1 border py-1.5 rounded text-xs text-gray-600"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    </React.Fragment>
                   );
                 })}
               </CardContent>

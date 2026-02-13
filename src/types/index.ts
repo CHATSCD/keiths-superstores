@@ -13,6 +13,16 @@ export interface InventoryItem {
   parLevel: number;
   unit: string;
   custom?: boolean;
+  // Executive features
+  costPerUnit?: number;       // $ cost per unit (for waste $ calculations)
+  // Training mode
+  trainingNote?: string;      // Tips / SOP for this item
+  targetQtyAM?: number;       // Target cook qty for AM shift
+  targetQtyPM?: number;       // Target cook qty for PM shift
+  targetQtyNight?: number;    // Target cook qty for Night shift
+  shelfLifeHours?: number;    // How long before this item expires
+  // Seasonal
+  seasonalTags?: string[];    // e.g. ['summer', 'holiday']
 }
 
 export interface ProductionEntry {
@@ -28,6 +38,9 @@ export interface ProductionEntry {
   deliSales?: number;
   brandedDeliSales?: number;
   totalSales?: number;
+  // Shift context (for difficulty weighting)
+  eventFlag?: boolean;         // Holiday / promo / game day
+  eventNote?: string;          // Description of event
 }
 
 export interface ProductionLineItem {
@@ -147,3 +160,72 @@ export interface BubbleConfig {
 }
 
 export type ScanStage = 'idle' | 'preprocessing' | 'scanning' | 'processing' | 'complete' | 'error';
+
+// ─── Smart Alert ─────────────────────────────────────────────────────────────
+export type AlertSeverity = 'critical' | 'warning' | 'info';
+export interface SmartAlert {
+  id: string;
+  severity: AlertSeverity;
+  title: string;
+  detail: string;
+  category: 'waste' | 'production' | 'inventory' | 'employee' | 'loss-prevention';
+  itemName?: string;
+  employeeName?: string;
+  estimatedLoss?: number;  // $ amount
+}
+
+// ─── Executive / Money Dashboard ─────────────────────────────────────────────
+export interface WasteMoneyEntry {
+  itemId: string;
+  itemName: string;
+  category: string;
+  totalWasted: number;
+  costPerUnit: number;
+  totalCost: number;
+  wastePercent: number;
+}
+
+export interface ExecutiveSummary {
+  totalWasteCost: number;
+  totalProducedCost: number;
+  wastePercent: number;
+  topWasteItems: WasteMoneyEntry[];
+  savingsAt10Pct: number;
+  savingsAt20Pct: number;
+  weeklyTrend: { week: string; wasteCost: number; producedCost: number }[];
+}
+
+// ─── What-If Scenario ─────────────────────────────────────────────────────────
+export interface WhatIfResult {
+  itemName: string;
+  currentAvgWaste: number;
+  projectedWaste: number;
+  wasteReduction: number;
+  estimatedSavings: number;
+  salesRisk: 'low' | 'medium' | 'high';
+  salesRiskNote: string;
+}
+
+// ─── Store Scorecard ──────────────────────────────────────────────────────────
+export interface StoreScore {
+  storeId: string;
+  storeName: string;
+  wastePercent: number;
+  sellThrough: number;
+  totalEntries: number;
+  totalWasteCost: number;
+  rank: number;
+  badge?: 'gold' | 'silver' | 'bronze';
+}
+
+// ─── ROI Report ───────────────────────────────────────────────────────────────
+export interface ROIReport {
+  month: string;
+  totalWasteCostThisMonth: number;
+  totalWasteCostLastMonth: number;
+  percentChange: number;
+  estimatedSaved: number;
+  topImprovements: string[];
+  topConcerns: string[];
+  recommendations: string[];
+}
