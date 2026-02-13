@@ -1,0 +1,39 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { queryOne } from '@/lib/db';
+import { comparePassword, signToken, setAuthCookie } from '@/lib/auth';
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => null);
+  if (!body?.email || !body?.password) {
+    return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
+  }
+
+  const user = await queryOne<{
+    id: string; name: string; email: string; password_hash: string;
+    role: 'admin' | 'manager' | 'employee'; store_id: string; active: boolean;
+  }>('SELECT * FROM users WHERE email = $1', [body.email.toLowerCase().trim()]);
+
+  if (!user || !user.active) {
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  }
+
+  const valid = await comparePassword(body.password, user.password_hash);
+  if (!valid) {
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  }
+
+  const token = signToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    storeId: user.store_id,
+    name: user.name,
+  });
+
+  setAuthCookie(token);
+
+  return NextResponse.json({
+    user: { id: user.id, name: user.name, email: user.email, role: user.role, storeId: user.store_id },
+    token,
+  });
+}
