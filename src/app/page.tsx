@@ -11,6 +11,7 @@ import {
   TrendingUp,
   BarChart2,
   AlertTriangle,
+  CalendarDays,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
@@ -95,6 +96,12 @@ export default function HomePage() {
       icon: BarChart2,
       color: 'bg-blue-100 text-blue-700',
       href: '/executive',
+    },
+    {
+      label: 'Scheduling',
+      icon: CalendarDays,
+      color: 'bg-indigo-100 text-indigo-700',
+      href: '/login',
     },
   ];
 
