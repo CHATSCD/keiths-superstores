@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Script from 'next/script';
 import { Printer, Settings, FileDown, QrCode } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
@@ -53,9 +54,9 @@ export default function PrintPage() {
   const handleDownloadPDF = async () => {
     const element = document.getElementById('bubble-sheet-section') as HTMLElement;
     if (!element) return;
-    /* eslint-disable */
-    const html2pdf = (await import('html2pdf.js')).default as any;
-    /* eslint-enable */
+    
+    const html2pdf = (window as any).html2pdf;
+    if (!html2pdf) return;
     const opt = {
       margin: 0.25,
       filename: `${formType}-${getTodayStr()}.pdf`,
@@ -69,9 +70,9 @@ export default function PrintPage() {
   const handleDownloadQRPDF = async () => {
     const element = document.getElementById('qr-ref-section') as HTMLElement;
     if (!element) return;
-    /* eslint-disable */
-    const html2pdf = (await import('html2pdf.js')).default as any;
-    /* eslint-enable */
+    
+    const html2pdf = (window as any).html2pdf;
+    if (!html2pdf) return;
     const opt = {
       margin: 0.25,
       filename: `qr-reference-${getTodayStr()}.pdf`,
@@ -98,6 +99,7 @@ export default function PrintPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" strategy="lazyOnload" />
       <Header />
       <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
         <h2 className="text-lg font-bold">Print Forms</h2>
